@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>出入境记录（iPhone 简化版）</title>
+  <title>出入境记录（iPhone 地图版）</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsvectormap@1.5.3/dist/css/jsvectormap.min.css" />
   <style>
     :root {
       --bg: #f2f4f7;
@@ -165,12 +166,44 @@
       gap: 8px;
       margin-top: 12px;
     }
-    .chip {
+        .chip {
       border: 1px solid var(--line);
       border-radius: 999px;
       padding: 8px 12px;
       font-size: 13px;
       background: white;
+    }
+    .flags-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .flag-card {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: white;
+      padding: 12px 8px;
+      text-align: center;
+    }
+    .flag-emoji {
+      font-size: 24px;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .flag-name {
+      font-size: 12px;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+    #worldMap {
+      width: 100%;
+      height: 240px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      overflow: hidden;
+      background: white;
+      margin-top: 12px;
     }
     .record {
       border: 1px solid var(--line);
@@ -238,7 +271,7 @@
 <body>
   <div class="wrap">
     <h1 class="title">出入境记录</h1>
-    <p class="sub">这是 iPhone 简化版：不带地图，不带外部脚本，尽量保证本地打开也能稳定运行。</p>
+    <p class="sub">这是 iPhone 版：保留国旗展示和世界地图高亮，历史记录改成更适合手机的卡片样式。</p>
 
     <div class="stats">
       <div class="stat"><div class="k">总记录数</div><div class="v" id="statTotal">0</div></div>
@@ -248,6 +281,17 @@
     <div class="card">
       <div class="banner">世界很大，您已经去过 <span id="visitedCountText">0</span> 个国家/地区啦。</div>
       <div id="countryChips" class="country-list"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title" style="font-size:20px; margin-bottom:10px;">去过的国家/地区国旗</div>
+      <div id="flagsGrid" class="flags-grid"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title" style="font-size:20px; margin-bottom:10px;">世界地图</div>
+      <div id="worldMap"></div>
+      <div class="helper">地图会高亮已去过的国家/地区。</div>
     </div>
 
     <div class="tabs">
@@ -389,6 +433,8 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/jsvectormap@1.5.3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsvectormap@1.5.3/dist/maps/world.js"></script>
   <script>
     const STORAGE_KEY = 'iphone-entry-exit-simple-v1';
     const COUNTRY_LABELS = {
@@ -400,6 +446,7 @@
     };
 
     let records = [];
+    let worldMapInstance = null;
 
     const $ = (id) => document.getElementById(id);
 
@@ -448,6 +495,11 @@
       return `${rec.date} ${rec.hour}:00`;
     }
 
+    function isoToFlagEmoji(iso2) {
+      if (!iso2 || iso2.length !== 2) return '🌍';
+      return String.fromCodePoint(...iso2.toUpperCase().split('').map(c => 127397 + c.charCodeAt(0)));
+    }
+
     function renderStats() {
       $('statTotal').textContent = records.length;
       const countries = [...new Set(records.map(r => r.country).filter(Boolean))];
@@ -456,6 +508,15 @@
       $('countryChips').innerHTML = countries.length
         ? countries.map(c => `<span class="chip">${COUNTRY_LABELS[c] || c}</span>`).join('')
         : '<div class="empty">还没有国家/地区记录</div>';
+
+      $('flagsGrid').innerHTML = countries.length
+        ? countries.map(c => `
+          <div class="flag-card">
+            <div class="flag-emoji">${isoToFlagEmoji(c)}</div>
+            <div class="flag-name">${COUNTRY_LABELS[c] || c}</div>
+          </div>
+        `).join('')
+        : '<div class="empty" style="grid-column:1 / -1;">还没有国家/地区记录</div>';
     }
 
     function renderHistory() {
@@ -489,9 +550,42 @@
       `).join('');
     }
 
+    function renderMap() {
+      const countries = [...new Set(records.map(r => r.country).filter(Boolean))];
+      const mapEl = $('worldMap');
+      mapEl.innerHTML = '';
+      if (!countries.length) {
+        mapEl.innerHTML = '<div class="empty">还没有地图数据</div>';
+        return;
+      }
+      if (typeof jsVectorMap === 'undefined') {
+        mapEl.innerHTML = '<div class="empty">地图加载失败</div>';
+        return;
+      }
+      worldMapInstance = new jsVectorMap({
+        selector: '#worldMap',
+        map: 'world',
+        zoomButtons: true,
+        selectedRegions: countries,
+        regionStyle: {
+          initial: { fill: '#e5eefb', stroke: '#ffffff', strokeWidth: 0.8 },
+          selected: { fill: '#4f8ef7' },
+          hover: { fill: '#93c5fd' }
+        },
+        regionsSelectable: true,
+        regionsSelectableOne: false,
+        onRegionTooltipShow(event, tooltip, code) {
+          if (countries.includes(code)) {
+            tooltip.text((COUNTRY_LABELS[code] || code) + '（已去过）');
+          }
+        }
+      });
+    }
+
     function renderAll() {
       renderStats();
       renderHistory();
+      renderMap();
       updateVisaUI();
     }
 
