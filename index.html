@@ -3,31 +3,37 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>出入境记录 Dashboard</title>
+  <title>出入境记录 Dashboard · Modern Mobile</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsvectormap@1.5.3/dist/css/jsvectormap.min.css" />
   <style>
     :root {
-      --bg: #f6f8fb;
-      --card: #ffffff;
-      --text: #1f2937;
-      --muted: #6b7280;
-      --line: #e5e7eb;
-      --primary: #2563eb;
+      --bg: #f3f7ff;
+      --bg-soft: #eef4ff;
+      --card: rgba(255,255,255,0.92);
+      --card-strong: #ffffff;
+      --text: #162033;
+      --muted: #667085;
+      --line: #dde7f5;
+      --line-strong: #c8d7ee;
+      --primary: #3b82f6;
+      --primary-2: #6366f1;
+      --primary-soft: #e8f0ff;
       --entry: #059669;
-      --entry-soft: #d1fae5;
+      --entry-soft: #d8f5ea;
       --exit: #7c3aed;
-      --exit-soft: #ede9fe;
+      --exit-soft: #efe7ff;
       --danger: #dc2626;
       --warning: #d97706;
-      --warning-soft: #fef3c7;
-      --shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
-      --radius: 18px;
+      --warning-soft: #fff1d8;
+      --shadow: 0 10px 30px rgba(59, 130, 246, 0.10);
+      --shadow-strong: 0 18px 50px rgba(22, 32, 51, 0.12);
+      --radius: 22px;
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-      background: var(--bg);
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: radial-gradient(circle at top left, #f7fbff 0%, var(--bg) 42%, #edf3ff 100%);
       color: var(--text);
     }
     .container { max-width: 1320px; margin: 0 auto; padding: 24px; }
@@ -38,24 +44,24 @@
     .header p { color: var(--muted); margin-top: 8px; line-height: 1.6; }
     .actions { display: flex; gap: 10px; flex-wrap: wrap; }
     .btn {
-      border: 1px solid var(--line); background: white; color: var(--text); padding: 10px 14px; border-radius: 14px; cursor: pointer; font-size: 14px; transition: 0.2s ease;
+      border: 1px solid var(--line); background: rgba(255,255,255,0.92); color: var(--text); padding: 11px 15px; border-radius: 16px; cursor: pointer; font-size: 14px; transition: 0.2s ease; box-shadow: 0 1px 0 rgba(255,255,255,0.5) inset;
     }
     .btn:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
-    .btn.primary { background: var(--primary); color: white; border-color: var(--primary); }
+    .btn.primary { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%); color: white; border-color: transparent; box-shadow: 0 10px 22px rgba(99,102,241,0.25); }
     .btn.danger { color: var(--danger); }
     .grid-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 22px; }
     .card {
-      background: var(--card); border: 1px solid rgba(229,231,235,0.8); border-radius: var(--radius); box-shadow: var(--shadow);
+      background: var(--card); backdrop-filter: blur(12px); border: 1px solid rgba(221,231,245,0.95); border-radius: var(--radius); box-shadow: var(--shadow);
     }
     .stat { padding: 18px; }
     .stat .label { color: var(--muted); font-size: 14px; }
     .stat .value { font-size: 32px; font-weight: 700; margin-top: 8px; }
     .stat .sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
     .tabs {
-      display: flex; background: white; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; margin-bottom: 20px;
+      display: flex; background: rgba(255,255,255,0.85); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; margin-bottom: 20px; box-shadow: var(--shadow);
     }
     .tab { flex: 1; padding: 14px; border: none; background: transparent; cursor: pointer; font-size: 15px; }
-    .tab.active { background: var(--primary); color: white; font-weight: 600; }
+    .tab.active { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%); color: white; font-weight: 700; box-shadow: inset 0 -1px 0 rgba(255,255,255,0.16); }
     .panel { display: none; }
     .panel.active { display: block; }
     .section-title { font-size: 22px; font-weight: 700; margin-bottom: 18px; }
@@ -74,7 +80,7 @@
     }
     .layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 20px; align-items: start; }
     .banner {
-      padding: 18px 20px; border-radius: 18px; background: linear-gradient(135deg, #eff6ff 0%, #f5f3ff 100%); border: 1px solid #dbeafe; margin-bottom: 20px;
+      padding: 20px 22px; border-radius: 24px; background: linear-gradient(135deg, #edf5ff 0%, #eef2ff 55%, #f8f2ff 100%); border: 1px solid #d7e5ff; margin-bottom: 20px; box-shadow: var(--shadow);
     }
     .banner-main { font-size: 24px; font-weight: 800; line-height: 1.4; }
     .banner-sub { color: var(--muted); margin-top: 6px; line-height: 1.6; }
@@ -103,7 +109,7 @@
     }
     .list-stack { display: flex; flex-direction: column; gap: 10px; }
     .list-item {
-      display: flex; justify-content: space-between; gap: 12px; align-items: center; border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; background: white;
+      display: flex; justify-content: space-between; gap: 12px; align-items: center; border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; background: rgba(255,255,255,0.95);
     }
     .empty { text-align: center; color: var(--muted); padding: 28px 16px; }
     .modal {
@@ -122,7 +128,7 @@
       display: block; max-width: 100%; max-height: 180px; object-fit: contain; border-radius: 12px; border: 1px solid var(--line); background: white; margin-top: 10px;
     }
     .thumb {
-      width: 84px; height: 84px; object-fit: cover; border-radius: 12px; border: 1px solid var(--line); background: white; display: block;
+      width: 72px; height: 72px; object-fit: cover; border-radius: 12px; border: 1px solid var(--line); background: white; display: block;
     }
     .thumb-wrap { display: flex; align-items: center; gap: 10px; }
     .flags-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; }
@@ -284,6 +290,11 @@
           </div>
 
           <div class="field">
+            <label for="timezone">时区</label>
+            <select id="timezone"></select>
+          </div>
+
+          <div class="field">
             <label for="country">国家/地区</label>
             <select id="country"></select>
           </div>
@@ -352,7 +363,7 @@
 
           <div class="field full">
             <button class="btn primary" id="saveBtn">保存记录</button>
-            <div class="helper">建议至少填写：类型、日期、时间（小时）、国家/地区。若签证政策为落地签、电子签、纸签，则必须上传签证页图片；“其他”不需要。</div>
+            <div class="helper">建议至少填写：类型、日期、时间（小时）、时区、国家/地区。最后的统计与先后顺序会统一按北京时间计算。若签证政策为落地签、电子签、纸签，则必须上传签证页图片；“其他”不需要。</div>
           </div>
         </div>
       </div>
@@ -427,6 +438,7 @@
                     <tr>
                       <th>类型</th>
                       <th>日期时间</th>
+                      <th>时区</th>
                       <th>国家/地区</th>
                       <th>城市</th>
                       <th>口岸</th>
@@ -487,6 +499,10 @@
         <div class="field">
           <label for="editHour">时间（24 小时制，仅小时）</label>
           <select id="editHour"></select>
+        </div>
+        <div class="field">
+          <label for="editTimezone">时区</label>
+          <select id="editTimezone"></select>
         </div>
         <div class="field">
           <label for="editCountry">国家/地区</label>
@@ -567,6 +583,19 @@
     const TRANSPORT_LABELS = {
       aviation: '航空', waterway: '水路', railway: '铁路', landway: '陆路', other: '其他'
     };
+    const TIMEZONE_OPTIONS = [
+      ['+08:00', 'UTC+08:00 北京 / 香港 / 澳门 / 台北 / 新加坡'],
+      ['+09:00', 'UTC+09:00 东京 / 首尔'],
+      ['+07:00', 'UTC+07:00 曼谷 / 河内 / 雅加达(西部)'],
+      ['+10:00', 'UTC+10:00 悉尼'],
+      ['+01:00', 'UTC+01:00 中欧'],
+      ['+00:00', 'UTC+00:00 伦敦 / UTC'],
+      ['-05:00', 'UTC-05:00 美东'],
+      ['-06:00', 'UTC-06:00 美中'],
+      ['-07:00', 'UTC-07:00 美山地'],
+      ['-08:00', 'UTC-08:00 美西']
+    ];
+
 
     const COUNTRY_OPTIONS = [
       ['AF','Afghanistan / 阿富汗'], ['AL','Albania / 阿尔巴尼亚'], ['DZ','Algeria / 阿尔及利亚'], ['AD','Andorra / 安道尔'],
@@ -623,9 +652,9 @@
     const ISO_TO_DISPLAY = Object.fromEntries(COUNTRY_OPTIONS.map(([iso, label]) => [iso, label.split(' / ')[0]]));
 
     const sampleData = [
-      { id: crypto.randomUUID(), direction: 'exit', date: '2026-03-01', hour: '08', country: 'US', city: 'Los Angeles', port: 'LAX', transport: 'aviation', flightNo: 'CX881', visaPolicy: 'visa_free', visaImage: '', note: '赴香港', stampImage: '', createdAt: new Date().toISOString() },
-      { id: crypto.randomUUID(), direction: 'entry', date: '2026-03-15', hour: '18', country: 'HK', city: 'Hong Kong', port: 'HKG', transport: 'aviation', flightNo: 'CX880', visaPolicy: 'visa_free', visaImage: '', note: '返程前短暂停留', stampImage: '', createdAt: new Date().toISOString() },
-      { id: crypto.randomUUID(), direction: 'entry', date: '2026-01-12', hour: '12', country: 'JP', city: 'Tokyo', port: 'NRT', transport: 'aviation', flightNo: 'JL62', visaPolicy: 'e_visa', visaImage: '', note: '学术访问', stampImage: '', createdAt: new Date().toISOString() }
+      { id: crypto.randomUUID(), direction: 'exit', date: '2026-03-01', hour: '08', timezone: '-08:00', country: 'US', city: 'Los Angeles', port: 'LAX', transport: 'aviation', flightNo: 'CX881', visaPolicy: 'visa_free', visaImage: '', note: '赴香港', stampImage: '', createdAt: new Date().toISOString() },
+      { id: crypto.randomUUID(), direction: 'entry', date: '2026-03-15', hour: '18', timezone: '+08:00', country: 'HK', city: 'Hong Kong', port: 'HKG', transport: 'aviation', flightNo: 'CX880', visaPolicy: 'visa_free', visaImage: '', note: '返程前短暂停留', stampImage: '', createdAt: new Date().toISOString() },
+      { id: crypto.randomUUID(), direction: 'entry', date: '2026-01-12', hour: '12', timezone: '+09:00', country: 'JP', city: 'Tokyo', port: 'NRT', transport: 'aviation', flightNo: 'JL62', visaPolicy: 'e_visa', visaImage: '', note: '学术访问', stampImage: '', createdAt: new Date().toISOString() }
     ];
 
     const $ = (id) => document.getElementById(id);
@@ -636,6 +665,7 @@
       try {
         records = JSON.parse(raw);
         if (!Array.isArray(records)) records = [];
+        records = records.map(r => ({ timezone: '+08:00', ...r }));
       } catch { records = []; }
     }
     function saveRecords() { localStorage.setItem(STORAGE_KEY, JSON.stringify(records)); }
@@ -667,13 +697,48 @@
       if (!iso2 || iso2.length !== 2) return '🌍';
       return String.fromCodePoint(...iso2.toUpperCase().split('').map(c => 127397 + c.charCodeAt(0)));
     }
-    function buildDateHour(date, hour) { return `${date} ${hour}:00`; }
-    function formatDateHour(date, hour) { return date && hour !== undefined ? `${date} ${hour}:00` : '-'; }
+    function parseOffsetToMinutes(offset) {
+      const sign = offset.startsWith('-') ? -1 : 1;
+      const [hh, mm] = offset.replace('+', '').replace('-', '').split(':').map(Number);
+      return sign * (hh * 60 + mm);
+    }
+    function getUtcMs(record) {
+      if (!record?.date || record?.hour === undefined || record?.hour === '') return 0;
+      const offset = record.timezone || '+08:00';
+      const [year, month, day] = record.date.split('-').map(Number);
+      const hour = Number(record.hour);
+      const tzMinutes = parseOffsetToMinutes(offset);
+      return Date.UTC(year, month - 1, day, hour, 0, 0) - tzMinutes * 60 * 1000;
+    }
+    function getBeijingDate(record) {
+      return new Date(getUtcMs(record) + 8 * 60 * 60 * 1000);
+    }
+    function getBeijingSortValue(record) {
+      return getUtcMs(record) + 8 * 60 * 60 * 1000;
+    }
+    function formatTimezone(offset) {
+      return `UTC${offset}`;
+    }
+    function formatDateHour(date, hour, timezone = '+08:00') {
+      return date && hour !== undefined ? `${date} ${hour}:00 (${formatTimezone(timezone)})` : '-';
+    }
+    function formatBeijingDateHour(record) {
+      const bj = getBeijingDate(record);
+      if (Number.isNaN(bj.getTime())) return '-';
+      const y = bj.getUTCFullYear();
+      const m = String(bj.getUTCMonth() + 1).padStart(2, '0');
+      const d = String(bj.getUTCDate()).padStart(2, '0');
+      const h = String(bj.getUTCHours()).padStart(2, '0');
+      return `${y}-${m}-${d} ${h}:00 (北京时间)`;
+    }
     function renderHourOptions(selectId) {
       $(selectId).innerHTML = Array.from({ length: 24 }, (_, i) => {
         const h = String(i).padStart(2, '0');
         return `<option value="${h}">${h}:00</option>`;
       }).join('');
+    }
+    function renderTimezoneOptions(selectId) {
+      $(selectId).innerHTML = TIMEZONE_OPTIONS.map(([value, label]) => `<option value="${value}">${label}</option>`).join('');
     }
     function renderCountryOptions(selectId, includeAll = false) {
       $(selectId).innerHTML = (includeAll ? '<option value="all">全部</option>' : '') + COUNTRY_OPTIONS.map(([iso, label]) => `<option value="${iso}">${label}</option>`).join('');
@@ -703,7 +768,7 @@
         const startOk = !filters.startDate || r.date >= filters.startDate;
         const endOk = !filters.endDate || r.date <= filters.endDate;
         return matchKeyword && matchDirection && matchCountry && matchTransport && startOk && endOk;
-      }).sort((a, b) => buildDateHour(b.date, b.hour).localeCompare(buildDateHour(a.date, a.hour)));
+      }).sort((a, b) => getBeijingSortValue(b) - getBeijingSortValue(a));
     }
     function renderFlags() {
       const visited = getVisitedCountries();
@@ -725,18 +790,23 @@
       $('statExit').textContent = exitCount;
       $('statCountries').textContent = visitedCount;
       $('statTopCountry').textContent = topCountry ? `最常见：${topCountry[0]} (${topCountry[1]})` : '最常见：-';
-      const latest = [...records].sort((a, b) => buildDateHour(b.date, b.hour).localeCompare(buildDateHour(a.date, a.hour)))[0];
-      $('latestRecordText').textContent = latest ? `${latest.direction === 'entry' ? '入境' : '出境'} · ${formatDateHour(latest.date, latest.hour)}` : '-';
-      $('latestRecordSub').textContent = latest ? `${ISO_TO_DISPLAY[latest.country] || '-'} / ${latest.city || '-'} / ${latest.port || '-'} / ${VISA_POLICY_LABELS[latest.visaPolicy] || '-'}` : '-';
+      const latest = [...records].sort((a, b) => getBeijingSortValue(b) - getBeijingSortValue(a))[0];
+      $('latestRecordText').textContent = latest ? `${latest.direction === 'entry' ? '入境' : '出境'} · ${formatBeijingDateHour(latest)}` : '-';
+      $('latestRecordSub').textContent = latest ? `${ISO_TO_DISPLAY[latest.country] || '-'} / ${latest.city || '-'} / ${latest.port || '-'} / ${formatTimezone(latest.timezone || '+08:00')} / ${VISA_POLICY_LABELS[latest.visaPolicy] || '无'}` : '-';
       const countryEntries = Object.entries(byCountry).sort((a, b) => b[1] - a[1]).slice(0, 10);
       $('countryStats').innerHTML = countryEntries.length ? countryEntries.map(([country, count]) => `
         <div class="list-item"><span>${country}</span><span class="badge entry">${count}</span></div>
       `).join('') : '<div class="empty">暂无数据</div>';
       const monthMap = {};
       records.forEach(r => {
-        if (!r.date) return; const month = r.date.slice(0, 7); if (!monthMap[month]) monthMap[month] = { entry: 0, exit: 0, total: 0 }; monthMap[month][r.direction] += 1; monthMap[month].total += 1;
+        if (!r.date) return;
+        const bj = getBeijingDate(r);
+        const month = `${bj.getUTCFullYear()}-${String(bj.getUTCMonth() + 1).padStart(2, '0')}`;
+        if (!monthMap[month]) monthMap[month] = { entry: 0, exit: 0, total: 0 };
+        monthMap[month][r.direction] += 1;
+        monthMap[month].total += 1;
       });
-      const months = Object.entries(monthMap).sort((a, b) => a[0].localeCompare(b[0])).slice(-8).reverse();
+      const months = Object.entries(monthMap).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 8);
       $('monthlyStats').innerHTML = months.length ? months.map(([month, stat]) => `
         <div class="list-item" style="display:block;"><div style="display:flex; justify-content:space-between; gap:12px; align-items:center;"><strong>${month}</strong><span class="badge entry">${stat.total}</span></div><div class="muted" style="margin-top:6px;">入境 ${stat.entry} 次 · 出境 ${stat.exit} 次</div></div>
       `).join('') : '<div class="empty">暂无数据</div>';
@@ -745,14 +815,15 @@
       const filtered = getFilteredRecords();
       $('recordCount').textContent = filtered.length;
       if (!filtered.length) {
-        $('recordTableBody').innerHTML = '<tr><td colspan="12" class="empty">暂无符合条件的记录</td></tr>';
+        $('recordTableBody').innerHTML = '<tr><td colspan="13" class="empty">暂无符合条件的记录</td></tr>';
         $('mobileHistoryList').innerHTML = '<div class="empty">暂无符合条件的记录</div>';
         return;
       }
       $('recordTableBody').innerHTML = filtered.map(r => `
         <tr>
           <td><span class="badge ${r.direction === 'entry' ? 'entry' : 'exit'}">${r.direction === 'entry' ? '入境' : '出境'}</span></td>
-          <td>${formatDateHour(r.date, r.hour)}</td>
+          <td>${formatDateHour(r.date, r.hour, r.timezone || '+08:00')}</td>
+          <td>${formatTimezone(r.timezone || '+08:00')}</td>
           <td>${ISO_TO_DISPLAY[r.country] || r.country || '-'}</td>
           <td>${r.city || '-'}</td>
           <td>${r.port || '-'}</td>
@@ -770,9 +841,13 @@
         <div class="mobile-record-card">
           <div class="mobile-record-top">
             <span class="badge ${r.direction === 'entry' ? 'entry' : 'exit'}">${r.direction === 'entry' ? '入境' : '出境'}</span>
-            <span class="muted">${formatDateHour(r.date, r.hour)}</span>
+            <span class="muted">${formatDateHour(r.date, r.hour, r.timezone || '+08:00')}</span>
           </div>
           <div class="mobile-record-grid">
+            <div>
+              <div class="mobile-label">时区</div>
+              <div>${formatTimezone(r.timezone || '+08:00')}</div>
+            </div>
             <div>
               <div class="mobile-label">国家/地区</div>
               <div>${ISO_TO_DISPLAY[r.country] || r.country || '-'}</div>
@@ -833,6 +908,7 @@
     function resetAddForm(keepSome = true) {
       const direction = keepSome ? $('direction').value : 'entry';
       const country = keepSome ? $('country').value : 'US';
+      const timezone = keepSome ? $('timezone').value : '+08:00';
       const city = keepSome ? $('city').value : '';
       const port = keepSome ? $('port').value : '';
       const transport = keepSome ? $('transport').value : 'aviation';
@@ -841,6 +917,7 @@
       $('date').value = new Date().toISOString().slice(0, 10);
       $('hour').value = String(new Date().getHours()).padStart(2, '0');
       $('country').value = country;
+      $('timezone').value = timezone;
       $('city').value = city;
       $('port').value = port;
       $('transport').value = transport;
@@ -856,7 +933,7 @@
     }
     function addRecord() {
       const record = {
-        id: crypto.randomUUID(), direction: $('direction').value, date: $('date').value, hour: $('hour').value, country: $('country').value, city: $('city').value.trim(), port: $('port').value.trim(),
+        id: crypto.randomUUID(), direction: $('direction').value, date: $('date').value, hour: $('hour').value, timezone: $('timezone').value, country: $('country').value, city: $('city').value.trim(), port: $('port').value.trim(),
         transport: $('transport').value, flightNo: $('flightNo').value.trim(), visaPolicy: $('visaPolicy').value, visaImage: currentVisaImage, note: $('note').value.trim(), stampImage: currentStampImage, createdAt: new Date().toISOString()
       };
       if (!record.date || record.hour === '' || !record.country) { alert('请至少填写：日期、时间（小时）、国家/地区。'); return; }
@@ -873,7 +950,7 @@
     function openEdit(id) {
       const record = records.find(r => r.id === id); if (!record) return;
       editingId = id; currentEditStampImage = record.stampImage || ''; currentEditVisaImage = record.visaImage || '';
-      $('editDirection').value = record.direction || 'entry'; $('editDate').value = record.date || ''; $('editHour').value = record.hour || '00'; $('editCountry').value = record.country || 'US';
+      $('editDirection').value = record.direction || 'entry'; $('editDate').value = record.date || ''; $('editHour').value = record.hour || '00'; $('editTimezone').value = record.timezone || '+08:00'; $('editCountry').value = record.country || 'US';
       $('editCity').value = record.city || ''; $('editPort').value = record.port || ''; $('editTransport').value = record.transport || 'other'; $('editFlightNo').value = record.flightNo || '';
       $('editVisaPolicy').value = record.visaPolicy || 'visa_free'; $('editNote').value = record.note || ''; $('editStampImage').value = ''; $('editVisaImage').value = '';
       updateEditVisaFieldVisibility(); setPreview($('editStampPreview'), $('clearEditStampBtn'), currentEditStampImage); setPreview($('editVisaPreview'), $('clearEditVisaBtn'), currentEditVisaImage);
@@ -886,7 +963,7 @@
       const nextCountry = $('editCountry').value;
       if (needsAnyVisaInfo(nextDirection, nextCountry) && needsVisaImage(nextVisaPolicy) && !currentEditVisaImage) { alert('当前签证政策需要上传签证页图片。'); return; }
       records = records.map(r => r.id !== editingId ? r : {
-        ...r, direction: $('editDirection').value, date: $('editDate').value, hour: $('editHour').value, country: $('editCountry').value, city: $('editCity').value.trim(), port: $('editPort').value.trim(),
+        ...r, direction: $('editDirection').value, date: $('editDate').value, hour: $('editHour').value, timezone: $('editTimezone').value, country: $('editCountry').value, city: $('editCity').value.trim(), port: $('editPort').value.trim(),
         transport: $('editTransport').value, flightNo: $('editFlightNo').value.trim(), visaPolicy: needsAnyVisaInfo(nextDirection, nextCountry) ? nextVisaPolicy : '', visaImage: needsAnyVisaInfo(nextDirection, nextCountry) ? currentEditVisaImage : '', note: $('editNote').value.trim(), stampImage: currentEditStampImage
       });
       saveRecords(); renderAll(); closeEdit();
@@ -895,8 +972,8 @@
       const blob = new Blob([JSON.stringify(records, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'entry_exit_records.json'; a.click(); URL.revokeObjectURL(url);
     }
     function exportCsv() {
-      const header = ['direction', 'date', 'hour', 'country', 'city', 'port', 'transport', 'flightNo', 'visaPolicy', 'hasVisaImage', 'note', 'hasStampImage', 'createdAt'];
-      const rows = records.map(r => [r.direction, r.date, r.hour, ISO_TO_DISPLAY[r.country] || r.country, r.city, r.port, TRANSPORT_LABELS[r.transport] || r.transport, r.flightNo, VISA_POLICY_LABELS[r.visaPolicy] || r.visaPolicy, r.visaImage ? 'yes' : 'no', r.note, r.stampImage ? 'yes' : 'no', r.createdAt].map(v => `"${String(v ?? '').replaceAll('"', '""')}"`).join(','));
+      const header = ['direction', 'date', 'hour', 'timezone', 'country', 'city', 'port', 'transport', 'flightNo', 'visaPolicy', 'hasVisaImage', 'note', 'hasStampImage', 'createdAt'];
+      const rows = records.map(r => [r.direction, r.date, r.hour, formatTimezone(r.timezone || '+08:00'), ISO_TO_DISPLAY[r.country] || r.country, r.city, r.port, TRANSPORT_LABELS[r.transport] || r.transport, r.flightNo, VISA_POLICY_LABELS[r.visaPolicy] || r.visaPolicy, r.visaImage ? 'yes' : 'no', r.note, r.stampImage ? 'yes' : 'no', r.createdAt].map(v => `"${String(v ?? '').replaceAll('"', '""')}"`).join(','));
       const csv = [header.join(','), ...rows].join('\n'); const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'entry_exit_records.csv'; a.click(); URL.revokeObjectURL(url);
     }
     function importJsonFile(file) {
@@ -937,6 +1014,7 @@
 
     loadRecords();
     renderHourOptions('hour'); renderHourOptions('editHour');
+    renderTimezoneOptions('timezone'); renderTimezoneOptions('editTimezone');
     renderCountryOptions('country'); renderCountryOptions('editCountry'); renderCountryOptions('filterCountry', true);
     bindEvents(); resetAddForm(false); updateVisaFieldVisibility(); updateEditVisaFieldVisibility(); renderAll();
     window.openEdit = openEdit; window.deleteRecord = deleteRecord;
