@@ -2,433 +2,549 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>出入境记录（iPhone 地图版）</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>出入境记录 Dashboard</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsvectormap@1.5.3/dist/css/jsvectormap.min.css" />
   <style>
     :root {
-      --bg: #f2f4f7;
+      --bg: #f6f8fb;
       --card: #ffffff;
       --text: #1f2937;
       --muted: #6b7280;
       --line: #e5e7eb;
       --primary: #2563eb;
+      --entry: #059669;
+      --entry-soft: #d1fae5;
+      --exit: #7c3aed;
+      --exit-soft: #ede9fe;
       --danger: #dc2626;
+      --warning: #d97706;
+      --warning-soft: #fef3c7;
+      --shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
       --radius: 18px;
     }
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    * { box-sizing: border-box; }
     body {
       margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
       background: var(--bg);
       color: var(--text);
     }
-    .wrap {
-      max-width: 760px;
-      margin: 0 auto;
-      padding: calc(16px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));
-    }
+    .container { max-width: 1320px; margin: 0 auto; padding: 24px; }
     h1, h2, h3, p { margin: 0; }
-    .title {
-      font-size: 32px;
-      font-weight: 800;
-      margin-bottom: 14px;
+    .header {
+      display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 20px;
     }
-    .sub {
-      color: var(--muted);
-      line-height: 1.6;
-      margin-bottom: 18px;
+    .header p { color: var(--muted); margin-top: 8px; line-height: 1.6; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn {
+      border: 1px solid var(--line); background: white; color: var(--text); padding: 10px 14px; border-radius: 14px; cursor: pointer; font-size: 14px; transition: 0.2s ease;
     }
+    .btn:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
+    .btn.primary { background: var(--primary); color: white; border-color: var(--primary); }
+    .btn.danger { color: var(--danger); }
+    .grid-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 22px; }
     .card {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      padding: 18px;
-      margin-bottom: 16px;
+      background: var(--card); border: 1px solid rgba(229,231,235,0.8); border-radius: var(--radius); box-shadow: var(--shadow);
     }
-    .stats {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-    .stat {
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 14px;
-    }
-    .stat .k {
-      font-size: 13px;
-      color: var(--muted);
-    }
-    .stat .v {
-      margin-top: 8px;
-      font-size: 30px;
-      font-weight: 800;
-    }
+    .stat { padding: 18px; }
+    .stat .label { color: var(--muted); font-size: 14px; }
+    .stat .value { font-size: 32px; font-weight: 700; margin-top: 8px; }
+    .stat .sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
     .tabs {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      border-radius: 16px;
-      overflow: hidden;
-      border: 1px solid var(--line);
-      margin-bottom: 16px;
-      background: white;
+      display: flex; background: white; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; margin-bottom: 20px;
     }
-    .tab {
-      border: none;
-      background: transparent;
-      padding: 14px 12px;
-      font-size: 17px;
-      font-weight: 700;
-      color: var(--primary);
-    }
-    .tab.active {
-      background: var(--primary);
-      color: white;
-    }
+    .tab { flex: 1; padding: 14px; border: none; background: transparent; cursor: pointer; font-size: 15px; }
+    .tab.active { background: var(--primary); color: white; font-weight: 600; }
     .panel { display: none; }
     .panel.active { display: block; }
-    .section-title {
-      font-size: 24px;
-      font-weight: 800;
-      margin-bottom: 16px;
-    }
-    .field { margin-bottom: 16px; }
-    label {
-      display: block;
-      font-size: 14px;
-      font-weight: 700;
-      margin-bottom: 8px;
-    }
+    .section-title { font-size: 22px; font-weight: 700; margin-bottom: 18px; }
+    .subsection-title { font-size: 18px; font-weight: 700; margin-bottom: 12px; }
+    .form-card, .filter-card, .table-card, .side-card { padding: 20px; }
+    .form-grid, .filter-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    .field { display: flex; flex-direction: column; gap: 8px; }
+    .field.full { grid-column: 1 / -1; }
+    label { font-size: 14px; color: #374151; font-weight: 600; }
     input, select, textarea {
-      width: 100%;
-      border: 1px solid #d1d5db;
-      border-radius: 16px;
-      padding: 14px 14px;
-      font-size: 17px;
-      background: white;
-      color: var(--text);
-      appearance: none;
-      -webkit-appearance: none;
+      width: 100%; border: 1px solid var(--line); border-radius: 14px; padding: 12px 13px; font-size: 14px; background: white; color: var(--text);
     }
-    textarea {
-      min-height: 90px;
-      resize: vertical;
+    textarea { min-height: 92px; resize: vertical; }
+    input:focus, select:focus, textarea:focus {
+      outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
     }
-    .row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-    .btn {
-      width: 100%;
-      border: none;
-      border-radius: 16px;
-      padding: 15px 16px;
-      font-size: 17px;
-      font-weight: 800;
-      background: var(--primary);
-      color: white;
-    }
-    .btn.secondary {
-      background: white;
-      color: var(--text);
-      border: 1px solid var(--line);
-    }
-    .btn.danger {
-      background: white;
-      color: var(--danger);
-      border: 1px solid #fecaca;
-    }
-    .helper {
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.6;
-      margin-top: 8px;
-    }
-    .status {
-      margin-top: 10px;
-      color: var(--muted);
-      font-size: 13px;
-      min-height: 18px;
-    }
+    .layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 20px; align-items: start; }
     .banner {
-      font-size: 20px;
-      font-weight: 800;
-      line-height: 1.5;
-      margin-bottom: 10px;
+      padding: 18px 20px; border-radius: 18px; background: linear-gradient(135deg, #eff6ff 0%, #f5f3ff 100%); border: 1px solid #dbeafe; margin-bottom: 20px;
     }
-    .country-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 12px;
+    .banner-main { font-size: 24px; font-weight: 800; line-height: 1.4; }
+    .banner-sub { color: var(--muted); margin-top: 6px; line-height: 1.6; }
+    .table-wrap { overflow: auto; border-radius: 14px; border: 1px solid var(--line); }
+    table { width: 100%; border-collapse: collapse; min-width: 1360px; background: white; }
+    th, td {
+      padding: 12px 14px; border-bottom: 1px solid var(--line); text-align: left; font-size: 14px; vertical-align: top;
     }
-        .chip {
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      padding: 8px 12px;
-      font-size: 13px;
-      background: white;
+    th {
+      color: var(--muted); font-weight: 600; background: #fafafa; position: sticky; top: 0; z-index: 1;
     }
-    .flags-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 10px;
-      margin-top: 12px;
+    .badge {
+      display: inline-flex; align-items: center; padding: 5px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;
     }
+    .badge.entry { color: var(--entry); background: var(--entry-soft); }
+    .badge.exit { color: var(--exit); background: var(--exit-soft); }
+    .badge.warning { color: var(--warning); background: var(--warning-soft); }
+    .row-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .mini-btn {
+      border: 1px solid var(--line); background: white; border-radius: 10px; padding: 7px 10px; cursor: pointer; font-size: 12px;
+    }
+    .mini-btn.delete { color: var(--danger); }
+    .muted { color: var(--muted); }
+    .summary-box {
+      background: #f8fafc; border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin-bottom: 16px; line-height: 1.6;
+    }
+    .list-stack { display: flex; flex-direction: column; gap: 10px; }
+    .list-item {
+      display: flex; justify-content: space-between; gap: 12px; align-items: center; border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; background: white;
+    }
+    .empty { text-align: center; color: var(--muted); padding: 28px 16px; }
+    .modal {
+      position: fixed; inset: 0; background: rgba(15,23,42,0.45); display: none; align-items: center; justify-content: center; padding: 24px; z-index: 1000;
+    }
+    .modal.show { display: flex; }
+    .modal-card {
+      width: min(980px, 100%); max-height: 90vh; overflow: auto; background: white; border-radius: 22px; box-shadow: 0 20px 50px rgba(15,23,42,0.24); padding: 20px;
+    }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .helper { margin-top: 14px; color: var(--muted); font-size: 13px; line-height: 1.7; }
+    .image-box {
+      border: 1px dashed #cbd5e1; border-radius: 16px; padding: 12px; background: #fafcff;
+    }
+    .stamp-preview {
+      display: block; max-width: 100%; max-height: 180px; object-fit: contain; border-radius: 12px; border: 1px solid var(--line); background: white; margin-top: 10px;
+    }
+    .thumb {
+      width: 84px; height: 84px; object-fit: cover; border-radius: 12px; border: 1px solid var(--line); background: white; display: block;
+    }
+    .thumb-wrap { display: flex; align-items: center; gap: 10px; }
+    .flags-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; }
     .flag-card {
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      background: white;
-      padding: 12px 8px;
-      text-align: center;
+      border: 1px solid var(--line); border-radius: 14px; padding: 12px 10px; text-align: center; background: white;
     }
-    .flag-emoji {
-      font-size: 24px;
-      line-height: 1;
-      margin-bottom: 8px;
-    }
-    .flag-name {
-      font-size: 12px;
-      line-height: 1.4;
-      word-break: break-word;
-    }
+    .flag-emoji { font-size: 28px; line-height: 1; display: block; margin-bottom: 8px; }
+    .flag-name { font-size: 13px; line-height: 1.4; word-break: break-word; }
     #worldMap {
-      width: 100%;
-      height: 240px;
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      overflow: hidden;
-      background: white;
-      margin-top: 12px;
+      width: 100%; height: 360px; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; background: #f8fbff;
     }
-    .record {
+    .inline-hidden { display: none; }
+
+    .desktop-history { display: block; }
+    .mobile-history { display: none; }
+    .mobile-record-card {
       border: 1px solid var(--line);
       border-radius: 16px;
       padding: 14px;
-      margin-bottom: 12px;
       background: white;
+      margin-bottom: 12px;
     }
-    .record-top {
+    .mobile-record-top {
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 10px;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
     }
-    .badge {
-      display: inline-block;
-      border-radius: 999px;
-      padding: 5px 10px;
-      font-size: 12px;
-      font-weight: 800;
-      background: #eef2ff;
-      color: #3730a3;
-    }
-    .record-text {
+    .mobile-record-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 12px;
       font-size: 14px;
-      line-height: 1.7;
-      color: #374151;
+      line-height: 1.6;
     }
-    .record-actions {
+    .mobile-record-full { grid-column: 1 / -1; }
+    .mobile-label {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 2px;
+    }
+    .mobile-actions {
       display: flex;
       gap: 8px;
       margin-top: 12px;
     }
-    .small-btn {
+    .mobile-actions .mini-btn {
       flex: 1;
-      border-radius: 12px;
       padding: 10px 12px;
-      border: 1px solid var(--line);
-      background: white;
-      font-size: 14px;
-      font-weight: 700;
+      border-radius: 12px;
     }
-    .small-btn.delete {
-      color: var(--danger);
-      border-color: #fecaca;
+    @media (max-width: 1080px) {
+      .grid-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .layout { grid-template-columns: 1fr; }
+      .form-grid, .filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
-    .hidden { display: none !important; }
-    .img-preview {
-      width: 100%;
-      max-height: 180px;
-      object-fit: contain;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      margin-top: 10px;
-      background: white;
-    }
-    .empty {
-      text-align: center;
-      color: var(--muted);
-      padding: 26px 12px;
+    @media (max-width: 720px) {
+      body { font-size: 16px; }
+      .container {
+        padding: calc(12px + env(safe-area-inset-top)) 12px calc(18px + env(safe-area-inset-bottom));
+      }
+      .grid-stats { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+      .form-grid, .filter-grid { grid-template-columns: 1fr; }
+      .header { align-items: stretch; margin-bottom: 14px; }
+      .header h1 { font-size: 28px; line-height: 1.2; }
+      .header p { font-size: 14px; }
+      .actions { width: 100%; display: grid; grid-template-columns: 1fr 1fr; }
+      .actions .btn { width: 100%; min-height: 46px; font-size: 15px; }
+      .stat { padding: 14px; }
+      .stat .label { font-size: 13px; }
+      .stat .value { font-size: 26px; }
+      .tabs {
+        position: sticky;
+        top: env(safe-area-inset-top);
+        z-index: 20;
+        margin-bottom: 14px;
+      }
+      .tab { padding: 13px 10px; font-size: 16px; }
+      .card { border-radius: 16px; }
+      .form-card, .filter-card, .table-card, .side-card { padding: 14px; }
+      .section-title { font-size: 20px; margin-bottom: 14px; }
+      .subsection-title { font-size: 17px; }
+      .banner { padding: 14px; margin-bottom: 14px; }
+      .banner-main { font-size: 18px; }
+      .banner-sub { font-size: 13px; }
+      .flags-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+      .flag-card { padding: 10px 8px; }
+      .flag-emoji { font-size: 24px; }
+      .flag-name { font-size: 12px; }
+      #worldMap { height: 220px; }
+      input, select, textarea {
+        font-size: 16px;
+        min-height: 46px;
+        padding: 12px 13px;
+      }
+      textarea { min-height: 88px; }
+      .btn { min-height: 46px; font-size: 15px; }
+      .desktop-history { display: none; }
+      .mobile-history { display: block; }
+      .table-wrap { border: none; overflow: visible; }
+      table { min-width: 0; }
+      .layout { gap: 14px; }
+      .summary-box { padding: 14px; }
+      .list-item { padding: 10px 12px; }
+      .mobile-record-grid { grid-template-columns: 1fr 1fr; }
     }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <h1 class="title">出入境记录</h1>
-    <p class="sub">这是 iPhone 版：保留国旗展示和世界地图高亮，历史记录改成更适合手机的卡片样式。</p>
-
-    <div class="stats">
-      <div class="stat"><div class="k">总记录数</div><div class="v" id="statTotal">0</div></div>
-      <div class="stat"><div class="k">去过国家/地区数</div><div class="v" id="statCountries">0</div></div>
+  <div class="container">
+    <div class="header">
+      <div>
+        <h1>出入境记录 Dashboard</h1>
+        <p>前半部分用于快速新增，后半部分用于历史浏览、筛选、统计与旅行可视化。数据默认保存在当前浏览器本地，不需要联网；但世界地图需要联网加载地图脚本。</p>
+      </div>
+      <div class="actions">
+        <button class="btn" id="exportJsonBtn">导出 JSON</button>
+        <button class="btn" id="exportCsvBtn">导出 CSV</button>
+        <button class="btn" id="importBtn">导入 JSON</button>
+        <input type="file" id="importFile" accept="application/json" style="display:none" />
+        <button class="btn danger" id="clearAllBtn">清空全部</button>
+      </div>
     </div>
 
-    <div class="card">
-      <div class="banner">世界很大，您已经去过 <span id="visitedCountText">0</span> 个国家/地区啦。</div>
-      <div id="countryChips" class="country-list"></div>
-    </div>
-
-    <div class="card">
-      <div class="section-title" style="font-size:20px; margin-bottom:10px;">去过的国家/地区国旗</div>
-      <div id="flagsGrid" class="flags-grid"></div>
-    </div>
-
-    <div class="card">
-      <div class="section-title" style="font-size:20px; margin-bottom:10px;">世界地图</div>
-      <div id="worldMap"></div>
-      <div class="helper">地图会高亮已去过的国家/地区。</div>
+    <div class="grid-stats">
+      <div class="card stat"><div class="label">总记录数</div><div class="value" id="statTotal">0</div></div>
+      <div class="card stat"><div class="label">入境次数</div><div class="value" id="statEntry">0</div></div>
+      <div class="card stat"><div class="label">出境次数</div><div class="value" id="statExit">0</div></div>
+      <div class="card stat"><div class="label">已去过国家/地区数</div><div class="value" id="statCountries">0</div><div class="sub" id="statTopCountry">最常见：-</div></div>
     </div>
 
     <div class="tabs">
       <button class="tab active" data-tab="addPanel">快速新增</button>
-      <button class="tab" data-tab="historyPanel">历史记录</button>
+      <button class="tab" data-tab="historyPanel">历史记录与统计</button>
     </div>
 
     <div id="addPanel" class="panel active">
-      <div class="card">
+      <div class="card form-card">
         <div class="section-title">新增一条出入境记录</div>
+        <div class="form-grid">
+          <div class="field">
+            <label for="direction">类型</label>
+            <select id="direction">
+              <option value="entry">入境</option>
+              <option value="exit">出境</option>
+            </select>
+          </div>
 
-        <div class="field">
-          <label for="direction">类型</label>
-          <select id="direction">
-            <option value="entry">入境</option>
-            <option value="exit">出境</option>
-          </select>
-        </div>
-
-        <div class="row">
           <div class="field">
             <label for="date">日期</label>
             <input id="date" type="date" />
           </div>
+
           <div class="field">
             <label for="hour">时间（24 小时制，仅小时）</label>
-            <select id="hour">
-              <option value="00">00:00</option><option value="01">01:00</option><option value="02">02:00</option><option value="03">03:00</option>
-              <option value="04">04:00</option><option value="05">05:00</option><option value="06">06:00</option><option value="07">07:00</option>
-              <option value="08">08:00</option><option value="09">09:00</option><option value="10">10:00</option><option value="11">11:00</option>
-              <option value="12">12:00</option><option value="13">13:00</option><option value="14">14:00</option><option value="15">15:00</option>
-              <option value="16">16:00</option><option value="17">17:00</option><option value="18">18:00</option><option value="19">19:00</option>
-              <option value="20">20:00</option><option value="21">21:00</option><option value="22">22:00</option><option value="23">23:00</option>
+            <select id="hour"></select>
+          </div>
+
+          <div class="field">
+            <label for="country">国家/地区</label>
+            <select id="country"></select>
+          </div>
+
+          <div class="field">
+            <label for="city">城市</label>
+            <input id="city" type="text" placeholder="如 Los Angeles / Tokyo / Hong Kong" />
+          </div>
+
+          <div class="field">
+            <label for="port">口岸 / 机场 / 关口</label>
+            <input id="port" type="text" placeholder="如 LAX / NRT / 深圳湾" />
+          </div>
+
+          <div class="field">
+            <label for="transport">交通方式</label>
+            <select id="transport">
+              <option value="aviation">航空</option>
+              <option value="waterway">水路</option>
+              <option value="railway">铁路</option>
+              <option value="landway">陆路</option>
+              <option value="other">其他</option>
             </select>
           </div>
-        </div>
 
-        <div class="field">
-          <label for="country">国家/地区</label>
-          <select id="country">
-            <option value="">请选择</option>
-            <option value="CN">China / 中国大陆</option>
-            <option value="HK">Hong Kong SAR / 香港</option>
-            <option value="MO">Macau SAR / 澳门</option>
-            <option value="TW">Taiwan / 台湾</option>
-            <option value="JP">Japan / 日本</option>
-            <option value="KR">South Korea / 韩国</option>
-            <option value="SG">Singapore / 新加坡</option>
-            <option value="MY">Malaysia / 马来西亚</option>
-            <option value="TH">Thailand / 泰国</option>
-            <option value="VN">Vietnam / 越南</option>
-            <option value="US">United States / 美国</option>
-            <option value="CA">Canada / 加拿大</option>
-            <option value="GB">United Kingdom / 英国</option>
-            <option value="FR">France / 法国</option>
-            <option value="DE">Germany / 德国</option>
-            <option value="IT">Italy / 意大利</option>
-            <option value="ES">Spain / 西班牙</option>
-            <option value="AU">Australia / 澳大利亚</option>
-            <option value="NZ">New Zealand / 新西兰</option>
-            <option value="AE">United Arab Emirates / 阿联酋</option>
-          </select>
-        </div>
+          <div class="field">
+            <label for="flightNo">航班 / 车次</label>
+            <input id="flightNo" type="text" placeholder="如 CX880" />
+          </div>
 
-        <div class="field">
-          <label for="city">城市</label>
-          <input id="city" type="text" placeholder="如 Los Angeles / Tokyo / Hong Kong" />
-        </div>
+          <div class="field inline-hidden" id="visaPolicyField">
+            <label for="visaPolicy">签证政策</label>
+            <select id="visaPolicy">
+              <option value="visa_free">免签证</option>
+              <option value="visa_on_arrival">落地签</option>
+              <option value="e_visa">电子签</option>
+              <option value="paper_visa">纸签</option>
+              <option value="other">其他</option>
+            </select>
+          </div>
 
-        <div class="field">
-          <label for="port">口岸 / 机场 / 关口</label>
-          <input id="port" type="text" placeholder="如 LAX / NRT / 深圳湾" />
-        </div>
+          <div class="field full inline-hidden" id="visaImageField">
+            <label for="visaImage">签证页图片</label>
+            <div class="image-box">
+              <input id="visaImage" type="file" accept="image/*" />
+              <div class="helper">当签证政策为落地签、电子签、纸签时，需要上传签证页图片。</div>
+              <img id="visaPreview" class="stamp-preview" style="display:none" alt="visa preview" />
+              <button class="btn" id="clearVisaBtn" type="button" style="margin-top:10px; display:none;">移除签证页</button>
+            </div>
+          </div>
 
-        <div class="field">
-          <label for="transport">交通方式</label>
-          <select id="transport">
-            <option value="航空">航空</option>
-            <option value="水路">水路</option>
-            <option value="铁路">铁路</option>
-            <option value="陆路">陆路</option>
-            <option value="其他">其他</option>
-          </select>
-        </div>
+          <div class="field full">
+            <label for="note">备注</label>
+            <textarea id="note" placeholder="如：旅游 / 回港 / 返美 / 过关排队较久"></textarea>
+          </div>
 
-        <div class="field">
-          <label for="flightNo">航班 / 车次</label>
-          <input id="flightNo" type="text" placeholder="如 CX880" />
-        </div>
+          <div class="field full">
+            <label for="stampImage">入境章 / 出境章图片（可选）</label>
+            <div class="image-box">
+              <input id="stampImage" type="file" accept="image/*" />
+              <div class="helper">可以上传护照上的入境章/出境章照片。图片会随这条记录一起保存在本地浏览器里。</div>
+              <img id="stampPreview" class="stamp-preview" style="display:none" alt="stamp preview" />
+              <button class="btn" id="clearStampBtn" type="button" style="margin-top:10px; display:none;">移除图片</button>
+            </div>
+          </div>
 
-        <div class="field hidden" id="visaPolicyField">
-          <label for="visaPolicy">签证政策</label>
-          <select id="visaPolicy">
-            <option value="免签证">免签证</option>
-            <option value="落地签">落地签</option>
-            <option value="电子签">电子签</option>
-            <option value="纸签">纸签</option>
-            <option value="其他">其他</option>
-          </select>
+          <div class="field full">
+            <button class="btn primary" id="saveBtn">保存记录</button>
+            <div class="helper">建议至少填写：类型、日期、时间（小时）、国家/地区。若签证政策为落地签、电子签、纸签，则必须上传签证页图片；“其他”不需要。</div>
+          </div>
         </div>
-
-        <div class="field hidden" id="visaImageField">
-          <label for="visaImage">签证页图片</label>
-          <input id="visaImage" type="file" accept="image/*" />
-          <img id="visaPreview" class="img-preview hidden" alt="visa preview" />
-          <button class="btn secondary hidden" id="clearVisaBtn" type="button" style="margin-top:10px;">移除签证页</button>
-        </div>
-
-        <div class="field">
-          <label for="stampImage">入境章 / 出境章图片（可选）</label>
-          <input id="stampImage" type="file" accept="image/*" />
-          <img id="stampPreview" class="img-preview hidden" alt="stamp preview" />
-          <button class="btn secondary hidden" id="clearStampBtn" type="button" style="margin-top:10px;">移除图片</button>
-        </div>
-
-        <div class="field">
-          <label for="note">备注</label>
-          <textarea id="note" placeholder="如：旅游 / 回港 / 返美 / 过关排队较久"></textarea>
-        </div>
-
-        <button class="btn" id="saveBtn">保存记录</button>
-        <div id="saveStatus" class="status"></div>
       </div>
     </div>
 
     <div id="historyPanel" class="panel">
-      <div class="card">
-        <div class="section-title">历史记录</div>
-        <div class="row" style="margin-bottom:14px;">
-          <button class="btn secondary" id="exportBtn">导出 JSON</button>
-          <button class="btn danger" id="clearAllBtn">清空全部</button>
+      <div class="banner">
+        <div class="banner-main">世界很大，您已经去过 <span id="visitedCountryCountBanner">0</span> 个国家/地区啦。</div>
+        <div class="banner-sub">下面会展示您去过的国家/地区、对应国旗，以及世界地图上的高亮区域。</div>
+      </div>
+
+      <div class="card side-card" style="margin-bottom:20px;">
+        <div class="subsection-title">去过的国家/地区国旗</div>
+        <div id="flagsGrid" class="flags-grid"></div>
+      </div>
+
+      <div class="card side-card" style="margin-bottom:20px;">
+        <div class="subsection-title">世界地图</div>
+        <div id="worldMap"></div>
+        <div class="helper">地图会点亮已识别到 ISO 国家代码的国家/地区。</div>
+      </div>
+
+      <div class="layout">
+        <div>
+          <div class="card filter-card" style="margin-bottom:20px;">
+            <div class="section-title">筛选条件</div>
+            <div class="filter-grid">
+              <div class="field full">
+                <label for="filterKeyword">关键词</label>
+                <input id="filterKeyword" type="text" placeholder="搜索国家、城市、口岸、航班号、备注" />
+              </div>
+              <div class="field">
+                <label for="filterDirection">类型</label>
+                <select id="filterDirection">
+                  <option value="all">全部</option>
+                  <option value="entry">入境</option>
+                  <option value="exit">出境</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="filterCountry">国家/地区</label>
+                <select id="filterCountry"><option value="all">全部</option></select>
+              </div>
+              <div class="field">
+                <label for="filterTransport">交通方式</label>
+                <select id="filterTransport">
+                  <option value="all">全部</option>
+                  <option value="aviation">航空</option>
+                  <option value="waterway">水路</option>
+                  <option value="railway">铁路</option>
+                  <option value="landway">陆路</option>
+                  <option value="other">其他</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="filterStartDate">开始日期</label>
+                <input id="filterStartDate" type="date" />
+              </div>
+              <div class="field">
+                <label for="filterEndDate">结束日期</label>
+                <input id="filterEndDate" type="date" />
+              </div>
+            </div>
+          </div>
+
+          <div class="card table-card">
+            <div class="section-title">历史记录（<span id="recordCount">0</span> 条）</div>
+            <div class="desktop-history">
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>类型</th>
+                      <th>日期时间</th>
+                      <th>国家/地区</th>
+                      <th>城市</th>
+                      <th>口岸</th>
+                      <th>交通</th>
+                      <th>航班/车次</th>
+                      <th>签证政策</th>
+                      <th>签证页</th>
+                      <th>签章图片</th>
+                      <th>备注</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="recordTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="mobile-history" id="mobileHistoryList"></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card side-card" style="margin-bottom:20px;">
+            <div class="section-title">统计摘要</div>
+            <div class="summary-box">
+              <div class="muted">最近一次记录</div>
+              <div id="latestRecordText" style="font-weight:700; margin-top:8px;">-</div>
+              <div id="latestRecordSub" class="muted" style="margin-top:4px;">-</div>
+            </div>
+            <div style="font-weight:700; margin-bottom:10px;">按国家/地区统计</div>
+            <div id="countryStats" class="list-stack"></div>
+          </div>
+
+          <div class="card side-card">
+            <div class="section-title">按月份统计</div>
+            <div id="monthlyStats" class="list-stack"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="editModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>编辑记录</h2>
+        <button class="btn" id="closeModalBtn">关闭</button>
+      </div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label for="editDirection">类型</label>
+          <select id="editDirection"><option value="entry">入境</option><option value="exit">出境</option></select>
         </div>
         <div class="field">
-          <label for="importFile">导入 JSON</label>
-          <input id="importFile" type="file" accept="application/json" />
+          <label for="editDate">日期</label>
+          <input id="editDate" type="date" />
         </div>
-        <div id="historyList"></div>
+        <div class="field">
+          <label for="editHour">时间（24 小时制，仅小时）</label>
+          <select id="editHour"></select>
+        </div>
+        <div class="field">
+          <label for="editCountry">国家/地区</label>
+          <select id="editCountry"></select>
+        </div>
+        <div class="field">
+          <label for="editCity">城市</label>
+          <input id="editCity" type="text" />
+        </div>
+        <div class="field">
+          <label for="editPort">口岸 / 机场 / 关口</label>
+          <input id="editPort" type="text" />
+        </div>
+        <div class="field">
+          <label for="editTransport">交通方式</label>
+          <select id="editTransport">
+            <option value="aviation">航空</option>
+            <option value="waterway">水路</option>
+            <option value="railway">铁路</option>
+            <option value="landway">陆路</option>
+            <option value="other">其他</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="editFlightNo">航班 / 车次</label>
+          <input id="editFlightNo" type="text" />
+        </div>
+        <div class="field inline-hidden" id="editVisaPolicyField">
+          <label for="editVisaPolicy">签证政策</label>
+          <select id="editVisaPolicy">
+            <option value="visa_free">免签证</option>
+            <option value="visa_on_arrival">落地签</option>
+            <option value="e_visa">电子签</option>
+            <option value="paper_visa">纸签</option>
+            <option value="other">其他</option>
+          </select>
+        </div>
+        <div class="field full inline-hidden" id="editVisaImageField">
+          <label for="editVisaImage">签证页图片</label>
+          <div class="image-box">
+            <input id="editVisaImage" type="file" accept="image/*" />
+            <img id="editVisaPreview" class="stamp-preview" style="display:none" alt="edit visa preview" />
+            <button class="btn" id="clearEditVisaBtn" type="button" style="margin-top:10px; display:none;">移除签证页</button>
+          </div>
+        </div>
+        <div class="field full">
+          <label for="editNote">备注</label>
+          <textarea id="editNote"></textarea>
+        </div>
+        <div class="field full">
+          <label for="editStampImage">入境章 / 出境章图片</label>
+          <div class="image-box">
+            <input id="editStampImage" type="file" accept="image/*" />
+            <img id="editStampPreview" class="stamp-preview" style="display:none" alt="edit stamp preview" />
+            <button class="btn" id="clearEditStampBtn" type="button" style="margin-top:10px; display:none;">移除图片</button>
+          </div>
+        </div>
+        <div class="field full"><button class="btn primary" id="saveEditBtn">保存修改</button></div>
       </div>
     </div>
   </div>
@@ -436,344 +552,394 @@
   <script src="https://cdn.jsdelivr.net/npm/jsvectormap@1.5.3"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsvectormap@1.5.3/dist/maps/world.js"></script>
   <script>
-    const STORAGE_KEY = 'iphone-entry-exit-simple-v1';
-    const COUNTRY_LABELS = {
-      CN: 'China / 中国大陆', HK: 'Hong Kong SAR / 香港', MO: 'Macau SAR / 澳门', TW: 'Taiwan / 台湾',
-      JP: 'Japan / 日本', KR: 'South Korea / 韩国', SG: 'Singapore / 新加坡', MY: 'Malaysia / 马来西亚',
-      TH: 'Thailand / 泰国', VN: 'Vietnam / 越南', US: 'United States / 美国', CA: 'Canada / 加拿大',
-      GB: 'United Kingdom / 英国', FR: 'France / 法国', DE: 'Germany / 德国', IT: 'Italy / 意大利',
-      ES: 'Spain / 西班牙', AU: 'Australia / 澳大利亚', NZ: 'New Zealand / 新西兰', AE: 'United Arab Emirates / 阿联酋'
+    const STORAGE_KEY = 'entry_exit_dashboard_records_v4';
+    let records = [];
+    let editingId = null;
+    let currentStampImage = '';
+    let currentVisaImage = '';
+    let currentEditStampImage = '';
+    let currentEditVisaImage = '';
+    let worldMapInstance = null;
+
+    const VISA_POLICY_LABELS = {
+      visa_free: '免签证', visa_on_arrival: '落地签', e_visa: '电子签', paper_visa: '纸签', other: '其他'
+    };
+    const TRANSPORT_LABELS = {
+      aviation: '航空', waterway: '水路', railway: '铁路', landway: '陆路', other: '其他'
     };
 
-    let records = [];
-    let worldMapInstance = null;
+    const COUNTRY_OPTIONS = [
+      ['AF','Afghanistan / 阿富汗'], ['AL','Albania / 阿尔巴尼亚'], ['DZ','Algeria / 阿尔及利亚'], ['AD','Andorra / 安道尔'],
+      ['AO','Angola / 安哥拉'], ['AG','Antigua and Barbuda / 安提瓜和巴布达'], ['AR','Argentina / 阿根廷'], ['AM','Armenia / 亚美尼亚'],
+      ['AU','Australia / 澳大利亚'], ['AT','Austria / 奥地利'], ['AZ','Azerbaijan / 阿塞拜疆'], ['BS','Bahamas / 巴哈马'],
+      ['BH','Bahrain / 巴林'], ['BD','Bangladesh / 孟加拉国'], ['BB','Barbados / 巴巴多斯'], ['BY','Belarus / 白俄罗斯'],
+      ['BE','Belgium / 比利时'], ['BZ','Belize / 伯利兹'], ['BJ','Benin / 贝宁'], ['BT','Bhutan / 不丹'],
+      ['BO','Bolivia / 玻利维亚'], ['BA','Bosnia and Herzegovina / 波斯尼亚和黑塞哥维那'], ['BW','Botswana / 博茨瓦纳'], ['BR','Brazil / 巴西'],
+      ['BN','Brunei / 文莱'], ['BG','Bulgaria / 保加利亚'], ['BF','Burkina Faso / 布基纳法索'], ['BI','Burundi / 布隆迪'],
+      ['CV','Cabo Verde / 佛得角'], ['KH','Cambodia / 柬埔寨'], ['CM','Cameroon / 喀麦隆'], ['CA','Canada / 加拿大'],
+      ['CF','Central African Republic / 中非共和国'], ['TD','Chad / 乍得'], ['CL','Chile / 智利'], ['CN','China / 中国'],
+      ['CO','Colombia / 哥伦比亚'], ['KM','Comoros / 科摩罗'], ['CG','Congo / 刚果（布）'], ['CD','Democratic Republic of the Congo / 刚果（金）'],
+      ['CR','Costa Rica / 哥斯达黎加'], ['CI','Côte d’Ivoire / 科特迪瓦'], ['HR','Croatia / 克罗地亚'], ['CU','Cuba / 古巴'],
+      ['CY','Cyprus / 塞浦路斯'], ['CZ','Czechia / 捷克'], ['DK','Denmark / 丹麦'], ['DJ','Djibouti / 吉布提'],
+      ['DM','Dominica / 多米尼克'], ['DO','Dominican Republic / 多米尼加共和国'], ['EC','Ecuador / 厄瓜多尔'], ['EG','Egypt / 埃及'],
+      ['SV','El Salvador / 萨尔瓦多'], ['GQ','Equatorial Guinea / 赤道几内亚'], ['ER','Eritrea / 厄立特里亚'], ['EE','Estonia / 爱沙尼亚'],
+      ['SZ','Eswatini / 斯威士兰'], ['ET','Ethiopia / 埃塞俄比亚'], ['FJ','Fiji / 斐济'], ['FI','Finland / 芬兰'],
+      ['FR','France / 法国'], ['GA','Gabon / 加蓬'], ['GM','Gambia / 冈比亚'], ['GE','Georgia / 格鲁吉亚'],
+      ['DE','Germany / 德国'], ['GH','Ghana / 加纳'], ['GR','Greece / 希腊'], ['GD','Grenada / 格林纳达'],
+      ['GT','Guatemala / 危地马拉'], ['GN','Guinea / 几内亚'], ['GW','Guinea-Bissau / 几内亚比绍'], ['GY','Guyana / 圭亚那'],
+      ['HT','Haiti / 海地'], ['HN','Honduras / 洪都拉斯'], ['HU','Hungary / 匈牙利'], ['IS','Iceland / 冰岛'],
+      ['IN','India / 印度'], ['ID','Indonesia / 印度尼西亚'], ['IR','Iran / 伊朗'], ['IQ','Iraq / 伊拉克'],
+      ['IE','Ireland / 爱尔兰'], ['IL','Israel / 以色列'], ['IT','Italy / 意大利'], ['JM','Jamaica / 牙买加'],
+      ['JP','Japan / 日本'], ['JO','Jordan / 约旦'], ['KZ','Kazakhstan / 哈萨克斯坦'], ['KE','Kenya / 肯尼亚'],
+      ['KI','Kiribati / 基里巴斯'], ['KP','North Korea / 朝鲜'], ['KR','South Korea / 韩国'], ['KW','Kuwait / 科威特'],
+      ['KG','Kyrgyzstan / 吉尔吉斯斯坦'], ['LA','Laos / 老挝'], ['LV','Latvia / 拉脱维亚'], ['LB','Lebanon / 黎巴嫩'],
+      ['LS','Lesotho / 莱索托'], ['LR','Liberia / 利比里亚'], ['LY','Libya / 利比亚'], ['LI','Liechtenstein / 列支敦士登'],
+      ['LT','Lithuania / 立陶宛'], ['LU','Luxembourg / 卢森堡'], ['MG','Madagascar / 马达加斯加'], ['MW','Malawi / 马拉维'],
+      ['MY','Malaysia / 马来西亚'], ['MV','Maldives / 马尔代夫'], ['ML','Mali / 马里'], ['MT','Malta / 马耳他'],
+      ['MH','Marshall Islands / 马绍尔群岛'], ['MR','Mauritania / 毛里塔尼亚'], ['MU','Mauritius / 毛里求斯'], ['MX','Mexico / 墨西哥'],
+      ['FM','Micronesia / 密克罗尼西亚'], ['MD','Moldova / 摩尔多瓦'], ['MC','Monaco / 摩纳哥'], ['MN','Mongolia / 蒙古'],
+      ['ME','Montenegro / 黑山'], ['MA','Morocco / 摩洛哥'], ['MZ','Mozambique / 莫桑比克'], ['MM','Myanmar / 缅甸'],
+      ['NA','Namibia / 纳米比亚'], ['NR','Nauru / 瑙鲁'], ['NP','Nepal / 尼泊尔'], ['NL','Netherlands / 荷兰'],
+      ['NZ','New Zealand / 新西兰'], ['NI','Nicaragua / 尼加拉瓜'], ['NE','Niger / 尼日尔'], ['NG','Nigeria / 尼日利亚'],
+      ['MK','North Macedonia / 北马其顿'], ['NO','Norway / 挪威'], ['OM','Oman / 阿曼'], ['PK','Pakistan / 巴基斯坦'],
+      ['PW','Palau / 帕劳'], ['PS','Palestine / 巴勒斯坦'], ['PA','Panama / 巴拿马'], ['PG','Papua New Guinea / 巴布亚新几内亚'],
+      ['PY','Paraguay / 巴拉圭'], ['PE','Peru / 秘鲁'], ['PH','Philippines / 菲律宾'], ['PL','Poland / 波兰'],
+      ['PT','Portugal / 葡萄牙'], ['QA','Qatar / 卡塔尔'], ['RO','Romania / 罗马尼亚'], ['RU','Russia / 俄罗斯'],
+      ['RW','Rwanda / 卢旺达'], ['KN','Saint Kitts and Nevis / 圣基茨和尼维斯'], ['LC','Saint Lucia / 圣卢西亚'], ['VC','Saint Vincent and the Grenadines / 圣文森特和格林纳丁斯'],
+      ['WS','Samoa / 萨摩亚'], ['SM','San Marino / 圣马力诺'], ['ST','São Tomé and Príncipe / 圣多美和普林西比'], ['SA','Saudi Arabia / 沙特阿拉伯'],
+      ['SN','Senegal / 塞内加尔'], ['RS','Serbia / 塞尔维亚'], ['SC','Seychelles / 塞舌尔'], ['SL','Sierra Leone / 塞拉利昂'],
+      ['SG','Singapore / 新加坡'], ['SK','Slovakia / 斯洛伐克'], ['SI','Slovenia / 斯洛文尼亚'], ['SB','Solomon Islands / 所罗门群岛'],
+      ['SO','Somalia / 索马里'], ['ZA','South Africa / 南非'], ['SS','South Sudan / 南苏丹'], ['ES','Spain / 西班牙'],
+      ['LK','Sri Lanka / 斯里兰卡'], ['SD','Sudan / 苏丹'], ['SR','Suriname / 苏里南'], ['SE','Sweden / 瑞典'],
+      ['CH','Switzerland / 瑞士'], ['SY','Syria / 叙利亚'], ['TW','Taiwan / 台湾'], ['TJ','Tajikistan / 塔吉克斯坦'],
+      ['TZ','Tanzania / 坦桑尼亚'], ['TH','Thailand / 泰国'], ['TL','Timor-Leste / 东帝汶'], ['TG','Togo / 多哥'],
+      ['TO','Tonga / 汤加'], ['TT','Trinidad and Tobago / 特立尼达和多巴哥'], ['TN','Tunisia / 突尼斯'], ['TR','Türkiye / 土耳其'],
+      ['TM','Turkmenistan / 土库曼斯坦'], ['TV','Tuvalu / 图瓦卢'], ['UG','Uganda / 乌干达'], ['UA','Ukraine / 乌克兰'],
+      ['AE','United Arab Emirates / 阿联酋'], ['GB','United Kingdom / 英国'], ['US','United States / 美国'], ['UY','Uruguay / 乌拉圭'],
+      ['UZ','Uzbekistan / 乌兹别克斯坦'], ['VU','Vanuatu / 瓦努阿图'], ['VA','Vatican City / 梵蒂冈'], ['VE','Venezuela / 委内瑞拉'],
+      ['VN','Vietnam / 越南'], ['YE','Yemen / 也门'], ['ZM','Zambia / 赞比亚'], ['ZW','Zimbabwe / 津巴布韦'],
+      ['HK','Hong Kong SAR / 香港'], ['MO','Macau SAR / 澳门']
+    ];
+    const ISO_TO_DISPLAY = Object.fromEntries(COUNTRY_OPTIONS.map(([iso, label]) => [iso, label.split(' / ')[0]]));
+
+    const sampleData = [
+      { id: crypto.randomUUID(), direction: 'exit', date: '2026-03-01', hour: '08', country: 'US', city: 'Los Angeles', port: 'LAX', transport: 'aviation', flightNo: 'CX881', visaPolicy: 'visa_free', visaImage: '', note: '赴香港', stampImage: '', createdAt: new Date().toISOString() },
+      { id: crypto.randomUUID(), direction: 'entry', date: '2026-03-15', hour: '18', country: 'HK', city: 'Hong Kong', port: 'HKG', transport: 'aviation', flightNo: 'CX880', visaPolicy: 'visa_free', visaImage: '', note: '返程前短暂停留', stampImage: '', createdAt: new Date().toISOString() },
+      { id: crypto.randomUUID(), direction: 'entry', date: '2026-01-12', hour: '12', country: 'JP', city: 'Tokyo', port: 'NRT', transport: 'aviation', flightNo: 'JL62', visaPolicy: 'e_visa', visaImage: '', note: '学术访问', stampImage: '', createdAt: new Date().toISOString() }
+    ];
 
     const $ = (id) => document.getElementById(id);
 
     function loadRecords() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) { records = sampleData; saveRecords(); return; }
       try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        records = raw ? JSON.parse(raw) : [];
+        records = JSON.parse(raw);
         if (!Array.isArray(records)) records = [];
-      } catch {
-        records = [];
-      }
+      } catch { records = []; }
     }
-
-    function saveRecordsToStorage() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-    }
-
-    function isEntry() {
-      return $('direction').value === 'entry';
-    }
-
-    function needsVisaInfo() {
-      return isEntry() && $('country').value && $('country').value !== 'CN';
-    }
-
-    function needsVisaImage() {
-      return ['落地签', '电子签', '纸签'].includes($('visaPolicy').value);
-    }
-
-    function updateVisaUI() {
-      const showVisa = needsVisaInfo();
-      $('visaPolicyField').classList.toggle('hidden', !showVisa);
-      $('visaImageField').classList.toggle('hidden', !(showVisa && needsVisaImage()));
-    }
-
-    function fileToDataURL(file) {
+    function saveRecords() { localStorage.setItem(STORAGE_KEY, JSON.stringify(records)); }
+    function readImageAsDataURL(file) {
       return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
+        const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file);
       });
     }
-
-    function formatDateTime(rec) {
-      return `${rec.date} ${rec.hour}:00`;
+    function setPreview(imgEl, btnEl, value) {
+      if (value) { imgEl.src = value; imgEl.style.display = 'block'; btnEl.style.display = 'inline-block'; }
+      else { imgEl.src = ''; imgEl.style.display = 'none'; btnEl.style.display = 'none'; }
     }
-
+    function needsVisaImage(policy) { return ['visa_on_arrival', 'e_visa', 'paper_visa'].includes(policy); }
+    function isEntryDirection(direction) { return direction === 'entry'; }
+    function needsAnyVisaInfo(direction, country) {
+      return isEntryDirection(direction) && country !== 'CN';
+    }
+    function updateVisaFieldVisibility() {
+      const showVisa = needsAnyVisaInfo($('direction').value, $('country').value);
+      $('visaPolicyField').classList.toggle('inline-hidden', !showVisa);
+      $('visaImageField').classList.toggle('inline-hidden', !(showVisa && needsVisaImage($('visaPolicy').value)));
+    }
+    function updateEditVisaFieldVisibility() {
+      const showVisa = needsAnyVisaInfo($('editDirection').value, $('editCountry').value);
+      $('editVisaPolicyField').classList.toggle('inline-hidden', !showVisa);
+      $('editVisaImageField').classList.toggle('inline-hidden', !(showVisa && needsVisaImage($('editVisaPolicy').value)));
+    }
     function isoToFlagEmoji(iso2) {
       if (!iso2 || iso2.length !== 2) return '🌍';
       return String.fromCodePoint(...iso2.toUpperCase().split('').map(c => 127397 + c.charCodeAt(0)));
     }
-
-    function renderStats() {
-      $('statTotal').textContent = records.length;
-      const countries = [...new Set(records.map(r => r.country).filter(Boolean))];
-      $('statCountries').textContent = countries.length;
-      $('visitedCountText').textContent = countries.length;
-      $('countryChips').innerHTML = countries.length
-        ? countries.map(c => `<span class="chip">${COUNTRY_LABELS[c] || c}</span>`).join('')
-        : '<div class="empty">还没有国家/地区记录</div>';
-
-      $('flagsGrid').innerHTML = countries.length
-        ? countries.map(c => `
-          <div class="flag-card">
-            <div class="flag-emoji">${isoToFlagEmoji(c)}</div>
-            <div class="flag-name">${COUNTRY_LABELS[c] || c}</div>
-          </div>
-        `).join('')
-        : '<div class="empty" style="grid-column:1 / -1;">还没有国家/地区记录</div>';
+    function buildDateHour(date, hour) { return `${date} ${hour}:00`; }
+    function formatDateHour(date, hour) { return date && hour !== undefined ? `${date} ${hour}:00` : '-'; }
+    function renderHourOptions(selectId) {
+      $(selectId).innerHTML = Array.from({ length: 24 }, (_, i) => {
+        const h = String(i).padStart(2, '0');
+        return `<option value="${h}">${h}:00</option>`;
+      }).join('');
     }
-
-    function renderHistory() {
-      const list = $('historyList');
-      const sorted = [...records].sort((a, b) => `${b.date} ${b.hour}`.localeCompare(`${a.date} ${a.hour}`));
-      if (!sorted.length) {
-        list.innerHTML = '<div class="empty">还没有记录</div>';
+    function renderCountryOptions(selectId, includeAll = false) {
+      $(selectId).innerHTML = (includeAll ? '<option value="all">全部</option>' : '') + COUNTRY_OPTIONS.map(([iso, label]) => `<option value="${iso}">${label}</option>`).join('');
+    }
+    function getVisitedCountries() {
+      const set = new Set(records.map(r => r.country).filter(Boolean));
+      return [...set].sort().map(iso => ({ iso, display: ISO_TO_DISPLAY[iso] || iso }));
+    }
+    function getFilters() {
+      return {
+        keyword: $('filterKeyword').value.trim().toLowerCase(),
+        direction: $('filterDirection').value,
+        country: $('filterCountry').value,
+        transport: $('filterTransport').value,
+        startDate: $('filterStartDate').value,
+        endDate: $('filterEndDate').value
+      };
+    }
+    function getFilteredRecords() {
+      const filters = getFilters();
+      return [...records].filter(r => {
+        const text = [ISO_TO_DISPLAY[r.country] || '', r.city, r.port, r.flightNo, r.note, VISA_POLICY_LABELS[r.visaPolicy] || ''].join(' ').toLowerCase();
+        const matchKeyword = !filters.keyword || text.includes(filters.keyword);
+        const matchDirection = filters.direction === 'all' || r.direction === filters.direction;
+        const matchCountry = filters.country === 'all' || r.country === filters.country;
+        const matchTransport = filters.transport === 'all' || r.transport === filters.transport;
+        const startOk = !filters.startDate || r.date >= filters.startDate;
+        const endOk = !filters.endDate || r.date <= filters.endDate;
+        return matchKeyword && matchDirection && matchCountry && matchTransport && startOk && endOk;
+      }).sort((a, b) => buildDateHour(b.date, b.hour).localeCompare(buildDateHour(a.date, a.hour)));
+    }
+    function renderFlags() {
+      const visited = getVisitedCountries();
+      $('visitedCountryCountBanner').textContent = visited.length;
+      $('flagsGrid').innerHTML = visited.length ? visited.map(item => `
+        <div class="flag-card"><span class="flag-emoji">${isoToFlagEmoji(item.iso)}</span><div class="flag-name">${item.display}</div></div>
+      `).join('') : '<div class="empty">暂无国家/地区数据</div>';
+    }
+    function renderStats() {
+      const total = records.length;
+      const entryCount = records.filter(r => r.direction === 'entry').length;
+      const exitCount = records.filter(r => r.direction === 'exit').length;
+      const byCountry = {};
+      records.forEach(r => { const key = ISO_TO_DISPLAY[r.country] || r.country || '未知'; byCountry[key] = (byCountry[key] || 0) + 1; });
+      const topCountry = Object.entries(byCountry).sort((a, b) => b[1] - a[1])[0];
+      const visitedCount = getVisitedCountries().length;
+      $('statTotal').textContent = total;
+      $('statEntry').textContent = entryCount;
+      $('statExit').textContent = exitCount;
+      $('statCountries').textContent = visitedCount;
+      $('statTopCountry').textContent = topCountry ? `最常见：${topCountry[0]} (${topCountry[1]})` : '最常见：-';
+      const latest = [...records].sort((a, b) => buildDateHour(b.date, b.hour).localeCompare(buildDateHour(a.date, a.hour)))[0];
+      $('latestRecordText').textContent = latest ? `${latest.direction === 'entry' ? '入境' : '出境'} · ${formatDateHour(latest.date, latest.hour)}` : '-';
+      $('latestRecordSub').textContent = latest ? `${ISO_TO_DISPLAY[latest.country] || '-'} / ${latest.city || '-'} / ${latest.port || '-'} / ${VISA_POLICY_LABELS[latest.visaPolicy] || '-'}` : '-';
+      const countryEntries = Object.entries(byCountry).sort((a, b) => b[1] - a[1]).slice(0, 10);
+      $('countryStats').innerHTML = countryEntries.length ? countryEntries.map(([country, count]) => `
+        <div class="list-item"><span>${country}</span><span class="badge entry">${count}</span></div>
+      `).join('') : '<div class="empty">暂无数据</div>';
+      const monthMap = {};
+      records.forEach(r => {
+        if (!r.date) return; const month = r.date.slice(0, 7); if (!monthMap[month]) monthMap[month] = { entry: 0, exit: 0, total: 0 }; monthMap[month][r.direction] += 1; monthMap[month].total += 1;
+      });
+      const months = Object.entries(monthMap).sort((a, b) => a[0].localeCompare(b[0])).slice(-8).reverse();
+      $('monthlyStats').innerHTML = months.length ? months.map(([month, stat]) => `
+        <div class="list-item" style="display:block;"><div style="display:flex; justify-content:space-between; gap:12px; align-items:center;"><strong>${month}</strong><span class="badge entry">${stat.total}</span></div><div class="muted" style="margin-top:6px;">入境 ${stat.entry} 次 · 出境 ${stat.exit} 次</div></div>
+      `).join('') : '<div class="empty">暂无数据</div>';
+    }
+    function renderTable() {
+      const filtered = getFilteredRecords();
+      $('recordCount').textContent = filtered.length;
+      if (!filtered.length) {
+        $('recordTableBody').innerHTML = '<tr><td colspan="12" class="empty">暂无符合条件的记录</td></tr>';
+        $('mobileHistoryList').innerHTML = '<div class="empty">暂无符合条件的记录</div>';
         return;
       }
-      list.innerHTML = sorted.map((r, idx) => `
-        <div class="record">
-          <div class="record-top">
-            <span class="badge">${r.direction === 'entry' ? '入境' : '出境'}</span>
-            <span style="font-size:13px;color:#6b7280;">${formatDateTime(r)}</span>
+      $('recordTableBody').innerHTML = filtered.map(r => `
+        <tr>
+          <td><span class="badge ${r.direction === 'entry' ? 'entry' : 'exit'}">${r.direction === 'entry' ? '入境' : '出境'}</span></td>
+          <td>${formatDateHour(r.date, r.hour)}</td>
+          <td>${ISO_TO_DISPLAY[r.country] || r.country || '-'}</td>
+          <td>${r.city || '-'}</td>
+          <td>${r.port || '-'}</td>
+          <td>${TRANSPORT_LABELS[r.transport] || '-'}</td>
+          <td>${r.flightNo || '-'}</td>
+          <td>${r.visaPolicy ? `<span class="badge warning">${VISA_POLICY_LABELS[r.visaPolicy] || '-'}</span>` : '<span class="muted">无</span>'}</td>
+          <td>${r.visaImage ? `<div class="thumb-wrap"><img class="thumb" src="${r.visaImage}" alt="visa" /><button class="mini-btn" onclick="window.open('${r.visaImage}', '_blank')">查看</button></div>` : '<span class="muted">无</span>'}</td>
+          <td>${r.stampImage ? `<div class="thumb-wrap"><img class="thumb" src="${r.stampImage}" alt="stamp" /><button class="mini-btn" onclick="window.open('${r.stampImage}', '_blank')">查看</button></div>` : '<span class="muted">无</span>'}</td>
+          <td>${r.note || '-'}</td>
+          <td><div class="row-actions"><button class="mini-btn" onclick="openEdit('${r.id}')">编辑</button><button class="mini-btn delete" onclick="deleteRecord('${r.id}')">删除</button></div></td>
+        </tr>
+      `).join('');
+
+      $('mobileHistoryList').innerHTML = filtered.map(r => `
+        <div class="mobile-record-card">
+          <div class="mobile-record-top">
+            <span class="badge ${r.direction === 'entry' ? 'entry' : 'exit'}">${r.direction === 'entry' ? '入境' : '出境'}</span>
+            <span class="muted">${formatDateHour(r.date, r.hour)}</span>
           </div>
-          <div class="record-text">
-            国家/地区：${COUNTRY_LABELS[r.country] || '-'}<br>
-            城市：${r.city || '-'}<br>
-            口岸：${r.port || '-'}<br>
-            交通方式：${r.transport || '-'}<br>
-            航班/车次：${r.flightNo || '-'}<br>
-            签证政策：${r.visaPolicy || '-'}<br>
-            备注：${r.note || '-'}
+          <div class="mobile-record-grid">
+            <div>
+              <div class="mobile-label">国家/地区</div>
+              <div>${ISO_TO_DISPLAY[r.country] || r.country || '-'}</div>
+            </div>
+            <div>
+              <div class="mobile-label">城市</div>
+              <div>${r.city || '-'}</div>
+            </div>
+            <div>
+              <div class="mobile-label">口岸</div>
+              <div>${r.port || '-'}</div>
+            </div>
+            <div>
+              <div class="mobile-label">交通</div>
+              <div>${TRANSPORT_LABELS[r.transport] || '-'}</div>
+            </div>
+            <div>
+              <div class="mobile-label">航班/车次</div>
+              <div>${r.flightNo || '-'}</div>
+            </div>
+            <div>
+              <div class="mobile-label">签证政策</div>
+              <div>${r.visaPolicy ? (VISA_POLICY_LABELS[r.visaPolicy] || '-') : '无'}</div>
+            </div>
+            <div class="mobile-record-full">
+              <div class="mobile-label">备注</div>
+              <div>${r.note || '-'}</div>
+            </div>
+            <div>
+              <div class="mobile-label">签证页</div>
+              <div>${r.visaImage ? `<button class="mini-btn" onclick="window.open('${r.visaImage}', '_blank')">查看</button>` : '无'}</div>
+            </div>
+            <div>
+              <div class="mobile-label">签章图片</div>
+              <div>${r.stampImage ? `<button class="mini-btn" onclick="window.open('${r.stampImage}', '_blank')">查看</button>` : '无'}</div>
+            </div>
           </div>
-          <div class="record-actions">
-            <button class="small-btn" onclick="viewImage(${idx}, 'stamp')">看签章</button>
-            <button class="small-btn" onclick="viewImage(${idx}, 'visa')">看签证页</button>
-            <button class="small-btn delete" onclick="deleteRecord(${idx})">删除</button>
+          <div class="mobile-actions">
+            <button class="mini-btn" onclick="openEdit('${r.id}')">编辑</button>
+            <button class="mini-btn delete" onclick="deleteRecord('${r.id}')">删除</button>
           </div>
         </div>
       `).join('');
     }
-
     function renderMap() {
-      const countries = [...new Set(records.map(r => r.country).filter(Boolean))];
-      const mapEl = $('worldMap');
-      mapEl.innerHTML = '';
-      if (!countries.length) {
-        mapEl.innerHTML = '<div class="empty">还没有地图数据</div>';
-        return;
-      }
-      if (typeof jsVectorMap === 'undefined') {
-        mapEl.innerHTML = '<div class="empty">地图加载失败</div>';
-        return;
-      }
+      const visited = getVisitedCountries();
+      const selected = {}; visited.forEach(item => { selected[item.iso] = 1; });
+      const mapContainer = $('worldMap'); mapContainer.innerHTML = '';
+      if (typeof jsVectorMap === 'undefined') { mapContainer.innerHTML = '<div class="empty">地图脚本未加载成功。请联网后重新打开此页面。</div>'; return; }
       worldMapInstance = new jsVectorMap({
-        selector: '#worldMap',
-        map: 'world',
-        zoomButtons: true,
-        selectedRegions: countries,
-        regionStyle: {
-          initial: { fill: '#e5eefb', stroke: '#ffffff', strokeWidth: 0.8 },
-          selected: { fill: '#4f8ef7' },
-          hover: { fill: '#93c5fd' }
-        },
-        regionsSelectable: true,
-        regionsSelectableOne: false,
-        onRegionTooltipShow(event, tooltip, code) {
-          if (countries.includes(code)) {
-            tooltip.text((COUNTRY_LABELS[code] || code) + '（已去过）');
-          }
-        }
+        selector: '#worldMap', map: 'world', zoomButtons: true, selectedRegions: Object.keys(selected),
+        regionStyle: { initial: { fill: '#e5eefb', stroke: '#ffffff', strokeWidth: 0.8 }, selected: { fill: '#4f8ef7' }, hover: { fill: '#93c5fd' } },
+        regionsSelectable: true, regionsSelectableOne: false,
+        onRegionTooltipShow(event, tooltip, code) { const item = visited.find(x => x.iso === code); if (item) tooltip.text(item.display + '（已去过）'); }
       });
     }
-
-    function renderAll() {
-      renderStats();
-      renderHistory();
-      renderMap();
-      updateVisaUI();
-    }
-
-    function resetForm() {
-      $('direction').value = 'entry';
+    function renderAll() { renderStats(); renderFlags(); renderTable(); renderMap(); }
+    function resetAddForm(keepSome = true) {
+      const direction = keepSome ? $('direction').value : 'entry';
+      const country = keepSome ? $('country').value : 'US';
+      const city = keepSome ? $('city').value : '';
+      const port = keepSome ? $('port').value : '';
+      const transport = keepSome ? $('transport').value : 'aviation';
+      const visaPolicy = keepSome ? $('visaPolicy').value : 'visa_free';
+      $('direction').value = direction;
       $('date').value = new Date().toISOString().slice(0, 10);
       $('hour').value = String(new Date().getHours()).padStart(2, '0');
-      $('country').value = '';
-      $('city').value = '';
-      $('port').value = '';
-      $('transport').value = '航空';
+      $('country').value = country;
+      $('city').value = city;
+      $('port').value = port;
+      $('transport').value = transport;
       $('flightNo').value = '';
-      $('visaPolicy').value = '免签证';
+      $('visaPolicy').value = visaPolicy;
       $('note').value = '';
       $('stampImage').value = '';
       $('visaImage').value = '';
-      $('stampPreview').src = '';
-      $('visaPreview').src = '';
-      $('stampPreview').classList.add('hidden');
-      $('visaPreview').classList.add('hidden');
-      $('clearStampBtn').classList.add('hidden');
-      $('clearVisaBtn').classList.add('hidden');
-      $('saveStatus').textContent = '';
-      updateVisaUI();
+      currentStampImage = ''; currentVisaImage = '';
+      setPreview($('stampPreview'), $('clearStampBtn'), '');
+      setPreview($('visaPreview'), $('clearVisaBtn'), '');
+      updateVisaFieldVisibility();
     }
-
-    async function saveRecord() {
-      try {
-        $('saveStatus').textContent = '保存中…';
-        const record = {
-          direction: $('direction').value,
-          date: $('date').value,
-          hour: $('hour').value,
-          country: $('country').value,
-          city: $('city').value.trim(),
-          port: $('port').value.trim(),
-          transport: $('transport').value,
-          flightNo: $('flightNo').value.trim(),
-          visaPolicy: '',
-          visaImage: '',
-          stampImage: '',
-          note: $('note').value.trim()
-        };
-
-        if (!record.date || !record.hour || !record.country) {
-          throw new Error('请至少填写日期、时间和国家/地区。');
-        }
-
-        const stampFile = $('stampImage').files[0];
-        if (stampFile) record.stampImage = await fileToDataURL(stampFile);
-
-        if (needsVisaInfo()) {
-          record.visaPolicy = $('visaPolicy').value;
-          const visaFile = $('visaImage').files[0];
-          if (needsVisaImage()) {
-            if (!visaFile) throw new Error('当前签证政策需要上传签证页图片。');
-            record.visaImage = await fileToDataURL(visaFile);
-          }
-        }
-
-        records.unshift(record);
-        saveRecordsToStorage();
-        renderAll();
-        resetForm();
-        $('saveStatus').textContent = '已保存。';
-      } catch (e) {
-        $('saveStatus').textContent = e.message || '保存失败。';
-      }
-    }
-
-    function deleteRecord(idx) {
-      const sorted = [...records].sort((a, b) => `${b.date} ${b.hour}`.localeCompare(`${a.date} ${a.hour}`));
-      const target = sorted[idx];
-      if (!target) return;
-      const realIndex = records.indexOf(target);
-      if (realIndex === -1) return;
-      if (!confirm('确定删除这条记录吗？')) return;
-      records.splice(realIndex, 1);
-      saveRecordsToStorage();
-      renderAll();
-    }
-
-    function viewImage(idx, type) {
-      const sorted = [...records].sort((a, b) => `${b.date} ${b.hour}`.localeCompare(`${a.date} ${a.hour}`));
-      const target = sorted[idx];
-      if (!target) return;
-      const url = type === 'stamp' ? target.stampImage : target.visaImage;
-      if (!url) {
-        alert(type === 'stamp' ? '这条记录没有签章图片。' : '这条记录没有签证页图片。');
-        return;
-      }
-      const win = window.open();
-      if (win) {
-        win.document.write(`<img src="${url}" style="max-width:100%;height:auto;display:block;margin:0 auto;" />`);
-      }
-    }
-
-    function exportJson() {
-      const blob = new Blob([JSON.stringify(records, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'entry_exit_records_simple.json';
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    function importJson(file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const data = JSON.parse(e.target.result);
-          if (!Array.isArray(data)) throw new Error();
-          records = data;
-          saveRecordsToStorage();
-          renderAll();
-          alert('导入成功。');
-        } catch {
-          alert('导入失败。请确认是本页面导出的 JSON。');
-        }
+    function addRecord() {
+      const record = {
+        id: crypto.randomUUID(), direction: $('direction').value, date: $('date').value, hour: $('hour').value, country: $('country').value, city: $('city').value.trim(), port: $('port').value.trim(),
+        transport: $('transport').value, flightNo: $('flightNo').value.trim(), visaPolicy: $('visaPolicy').value, visaImage: currentVisaImage, note: $('note').value.trim(), stampImage: currentStampImage, createdAt: new Date().toISOString()
       };
-      reader.readAsText(file);
+      if (!record.date || record.hour === '' || !record.country) { alert('请至少填写：日期、时间（小时）、国家/地区。'); return; }
+      if (needsAnyVisaInfo(record.direction, record.country) && needsVisaImage(record.visaPolicy) && !record.visaImage) { alert('当前签证政策需要上传签证页图片。'); return; }
+      if (!needsAnyVisaInfo(record.direction, record.country)) {
+        record.visaPolicy = '';
+        record.visaImage = '';
+      }
+      records.unshift(record); saveRecords(); renderAll(); resetAddForm(true); alert('已保存。');
     }
-
-    function clearAll() {
-      if (!confirm('确定清空全部记录吗？')) return;
-      records = [];
-      saveRecordsToStorage();
-      renderAll();
+    function deleteRecord(id) {
+      const ok = confirm('确定删除这条历史记录吗？'); if (!ok) return; records = records.filter(r => r.id !== id); saveRecords(); renderAll();
     }
-
-    document.querySelectorAll('.tab').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
-        document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
-        btn.classList.add('active');
-        $(btn.dataset.tab).classList.add('active');
+    function openEdit(id) {
+      const record = records.find(r => r.id === id); if (!record) return;
+      editingId = id; currentEditStampImage = record.stampImage || ''; currentEditVisaImage = record.visaImage || '';
+      $('editDirection').value = record.direction || 'entry'; $('editDate').value = record.date || ''; $('editHour').value = record.hour || '00'; $('editCountry').value = record.country || 'US';
+      $('editCity').value = record.city || ''; $('editPort').value = record.port || ''; $('editTransport').value = record.transport || 'other'; $('editFlightNo').value = record.flightNo || '';
+      $('editVisaPolicy').value = record.visaPolicy || 'visa_free'; $('editNote').value = record.note || ''; $('editStampImage').value = ''; $('editVisaImage').value = '';
+      updateEditVisaFieldVisibility(); setPreview($('editStampPreview'), $('clearEditStampBtn'), currentEditStampImage); setPreview($('editVisaPreview'), $('clearEditVisaBtn'), currentEditVisaImage);
+      $('editModal').classList.add('show');
+    }
+    function closeEdit() { editingId = null; currentEditStampImage = ''; currentEditVisaImage = ''; $('editModal').classList.remove('show'); }
+    function saveEdit() {
+      if (!editingId) return; const nextVisaPolicy = $('editVisaPolicy').value;
+      const nextDirection = $('editDirection').value;
+      const nextCountry = $('editCountry').value;
+      if (needsAnyVisaInfo(nextDirection, nextCountry) && needsVisaImage(nextVisaPolicy) && !currentEditVisaImage) { alert('当前签证政策需要上传签证页图片。'); return; }
+      records = records.map(r => r.id !== editingId ? r : {
+        ...r, direction: $('editDirection').value, date: $('editDate').value, hour: $('editHour').value, country: $('editCountry').value, city: $('editCity').value.trim(), port: $('editPort').value.trim(),
+        transport: $('editTransport').value, flightNo: $('editFlightNo').value.trim(), visaPolicy: needsAnyVisaInfo(nextDirection, nextCountry) ? nextVisaPolicy : '', visaImage: needsAnyVisaInfo(nextDirection, nextCountry) ? currentEditVisaImage : '', note: $('editNote').value.trim(), stampImage: currentEditStampImage
       });
-    });
-
-    $('direction').addEventListener('change', updateVisaUI);
-    $('country').addEventListener('change', updateVisaUI);
-    $('visaPolicy').addEventListener('change', updateVisaUI);
-    $('saveBtn').addEventListener('click', saveRecord);
-    $('exportBtn').addEventListener('click', exportJson);
-    $('clearAllBtn').addEventListener('click', clearAll);
-    $('importFile').addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (file) importJson(file);
-      e.target.value = '';
-    });
-
-    $('stampImage').addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      $('stampPreview').src = URL.createObjectURL(file);
-      $('stampPreview').classList.remove('hidden');
-      $('clearStampBtn').classList.remove('hidden');
-    });
-
-    $('visaImage').addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      $('visaPreview').src = URL.createObjectURL(file);
-      $('visaPreview').classList.remove('hidden');
-      $('clearVisaBtn').classList.remove('hidden');
-    });
-
-    $('clearStampBtn').addEventListener('click', () => {
-      $('stampImage').value = '';
-      $('stampPreview').src = '';
-      $('stampPreview').classList.add('hidden');
-      $('clearStampBtn').classList.add('hidden');
-    });
-
-    $('clearVisaBtn').addEventListener('click', () => {
-      $('visaImage').value = '';
-      $('visaPreview').src = '';
-      $('visaPreview').classList.add('hidden');
-      $('clearVisaBtn').classList.add('hidden');
-    });
+      saveRecords(); renderAll(); closeEdit();
+    }
+    function exportJson() {
+      const blob = new Blob([JSON.stringify(records, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'entry_exit_records.json'; a.click(); URL.revokeObjectURL(url);
+    }
+    function exportCsv() {
+      const header = ['direction', 'date', 'hour', 'country', 'city', 'port', 'transport', 'flightNo', 'visaPolicy', 'hasVisaImage', 'note', 'hasStampImage', 'createdAt'];
+      const rows = records.map(r => [r.direction, r.date, r.hour, ISO_TO_DISPLAY[r.country] || r.country, r.city, r.port, TRANSPORT_LABELS[r.transport] || r.transport, r.flightNo, VISA_POLICY_LABELS[r.visaPolicy] || r.visaPolicy, r.visaImage ? 'yes' : 'no', r.note, r.stampImage ? 'yes' : 'no', r.createdAt].map(v => `"${String(v ?? '').replaceAll('"', '""')}"`).join(','));
+      const csv = [header.join(','), ...rows].join('\n'); const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'entry_exit_records.csv'; a.click(); URL.revokeObjectURL(url);
+    }
+    function importJsonFile(file) {
+      const reader = new FileReader(); reader.onload = (e) => {
+        try { const data = JSON.parse(e.target.result); if (!Array.isArray(data)) throw new Error('JSON 不是数组'); records = data; saveRecords(); renderAll(); alert('导入成功。'); }
+        catch (err) { alert('导入失败：请确认文件是本 dashboard 导出的 JSON。'); }
+      }; reader.readAsText(file);
+    }
+    function clearAll() { const ok = confirm('确定清空全部记录吗？此操作不可撤销。'); if (!ok) return; records = []; saveRecords(); renderAll(); }
+    function bindEvents() {
+      document.querySelectorAll('.tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tab').forEach(x => x.classList.remove('active')); document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
+          btn.classList.add('active'); $(btn.dataset.tab).classList.add('active'); if (btn.dataset.tab === 'historyPanel') setTimeout(renderMap, 50);
+        });
+      });
+      $('direction').addEventListener('change', updateVisaFieldVisibility);
+      $('country').addEventListener('change', updateVisaFieldVisibility);
+      $('editDirection').addEventListener('change', updateEditVisaFieldVisibility);
+      $('editCountry').addEventListener('change', updateEditVisaFieldVisibility);
+      $('visaPolicy').addEventListener('change', updateVisaFieldVisibility);
+      $('editVisaPolicy').addEventListener('change', updateEditVisaFieldVisibility);
+      $('saveBtn').addEventListener('click', addRecord); $('saveEditBtn').addEventListener('click', saveEdit); $('closeModalBtn').addEventListener('click', closeEdit);
+      $('editModal').addEventListener('click', (e) => { if (e.target === $('editModal')) closeEdit(); });
+      ['filterKeyword', 'filterDirection', 'filterCountry', 'filterTransport', 'filterStartDate', 'filterEndDate'].forEach(id => { $(id).addEventListener('input', renderTable); $(id).addEventListener('change', renderTable); });
+      $('exportJsonBtn').addEventListener('click', exportJson); $('exportCsvBtn').addEventListener('click', exportCsv); $('clearAllBtn').addEventListener('click', clearAll);
+      $('importBtn').addEventListener('click', () => $('importFile').click());
+      $('importFile').addEventListener('change', (e) => { const file = e.target.files[0]; if (file) importJsonFile(file); e.target.value = ''; });
+      $('stampImage').addEventListener('change', async (e) => { const file = e.target.files[0]; if (!file) return; currentStampImage = await readImageAsDataURL(file); setPreview($('stampPreview'), $('clearStampBtn'), currentStampImage); });
+      $('clearStampBtn').addEventListener('click', () => { currentStampImage = ''; $('stampImage').value = ''; setPreview($('stampPreview'), $('clearStampBtn'), ''); });
+      $('visaImage').addEventListener('change', async (e) => { const file = e.target.files[0]; if (!file) return; currentVisaImage = await readImageAsDataURL(file); setPreview($('visaPreview'), $('clearVisaBtn'), currentVisaImage); });
+      $('clearVisaBtn').addEventListener('click', () => { currentVisaImage = ''; $('visaImage').value = ''; setPreview($('visaPreview'), $('clearVisaBtn'), ''); });
+      $('editStampImage').addEventListener('change', async (e) => { const file = e.target.files[0]; if (!file) return; currentEditStampImage = await readImageAsDataURL(file); setPreview($('editStampPreview'), $('clearEditStampBtn'), currentEditStampImage); });
+      $('clearEditStampBtn').addEventListener('click', () => { currentEditStampImage = ''; $('editStampImage').value = ''; setPreview($('editStampPreview'), $('clearEditStampBtn'), ''); });
+      $('editVisaImage').addEventListener('change', async (e) => { const file = e.target.files[0]; if (!file) return; currentEditVisaImage = await readImageAsDataURL(file); setPreview($('editVisaPreview'), $('clearEditVisaBtn'), currentEditVisaImage); });
+      $('clearEditVisaBtn').addEventListener('click', () => { currentEditVisaImage = ''; $('editVisaImage').value = ''; setPreview($('editVisaPreview'), $('clearEditVisaBtn'), ''); });
+    }
 
     loadRecords();
-    resetForm();
-    renderAll();
-
-    window.deleteRecord = deleteRecord;
-    window.viewImage = viewImage;
+    renderHourOptions('hour'); renderHourOptions('editHour');
+    renderCountryOptions('country'); renderCountryOptions('editCountry'); renderCountryOptions('filterCountry', true);
+    bindEvents(); resetAddForm(false); updateVisaFieldVisibility(); updateEditVisaFieldVisibility(); renderAll();
+    window.openEdit = openEdit; window.deleteRecord = deleteRecord;
   </script>
 </body>
 </html>
