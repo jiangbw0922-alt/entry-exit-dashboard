@@ -583,18 +583,41 @@
     const TRANSPORT_LABELS = {
       aviation: '航空', waterway: '水路', railway: '铁路', landway: '陆路', other: '其他'
     };
-    const TIMEZONE_OPTIONS = [
-      ['+08:00', 'UTC+08:00 北京 / 香港 / 澳门 / 台北 / 新加坡'],
-      ['+09:00', 'UTC+09:00 东京 / 首尔'],
-      ['+07:00', 'UTC+07:00 曼谷 / 河内 / 雅加达(西部)'],
-      ['+10:00', 'UTC+10:00 悉尼'],
-      ['+01:00', 'UTC+01:00 中欧'],
-      ['+00:00', 'UTC+00:00 伦敦 / UTC'],
-      ['-05:00', 'UTC-05:00 美东'],
-      ['-06:00', 'UTC-06:00 美中'],
-      ['-07:00', 'UTC-07:00 美山地'],
-      ['-08:00', 'UTC-08:00 美西']
+    const FALLBACK_TIMEZONE_OPTIONS = [
+      'UTC','Asia/Shanghai','Asia/Hong_Kong','Asia/Macau','Asia/Taipei','Asia/Tokyo','Asia/Seoul','Asia/Singapore','Asia/Bangkok','Asia/Ho_Chi_Minh',
+      'Europe/London','Europe/Paris','Europe/Berlin','Europe/Rome','Europe/Madrid','Europe/Zurich','Europe/Moscow',
+      'America/New_York','America/Chicago','America/Denver','America/Los_Angeles','America/Toronto','America/Vancouver',
+      'Australia/Sydney','Australia/Melbourne','Pacific/Auckland','Asia/Dubai'
     ];
+
+    const COUNTRY_TIMEZONE_DEFAULTS = {
+      AF:'Asia/Kabul', AL:'Europe/Tirane', DZ:'Africa/Algiers', AD:'Europe/Andorra', AO:'Africa/Luanda', AG:'America/Antigua', AR:'America/Argentina/Buenos_Aires', AM:'Asia/Yerevan',
+      AU:'Australia/Sydney', AT:'Europe/Vienna', AZ:'Asia/Baku', BS:'America/Nassau', BH:'Asia/Bahrain', BD:'Asia/Dhaka', BB:'America/Barbados', BY:'Europe/Minsk',
+      BE:'Europe/Brussels', BZ:'America/Belize', BJ:'Africa/Porto-Novo', BT:'Asia/Thimphu', BO:'America/La_Paz', BA:'Europe/Sarajevo', BW:'Africa/Gaborone', BR:'America/Sao_Paulo',
+      BN:'Asia/Brunei', BG:'Europe/Sofia', BF:'Africa/Ouagadougou', BI:'Africa/Bujumbura', CV:'Atlantic/Cape_Verde', KH:'Asia/Phnom_Penh', CM:'Africa/Douala', CA:'America/Toronto',
+      CF:'Africa/Bangui', TD:'Africa/Ndjamena', CL:'America/Santiago', CN:'Asia/Shanghai', CO:'America/Bogota', KM:'Indian/Comoro', CG:'Africa/Brazzaville', CD:'Africa/Kinshasa',
+      CR:'America/Costa_Rica', CI:'Africa/Abidjan', HR:'Europe/Zagreb', CU:'America/Havana', CY:'Asia/Nicosia', CZ:'Europe/Prague', DK:'Europe/Copenhagen', DJ:'Africa/Djibouti',
+      DM:'America/Dominica', DO:'America/Santo_Domingo', EC:'America/Guayaquil', EG:'Africa/Cairo', SV:'America/El_Salvador', GQ:'Africa/Malabo', ER:'Africa/Asmara', EE:'Europe/Tallinn',
+      SZ:'Africa/Mbabane', ET:'Africa/Addis_Ababa', FJ:'Pacific/Fiji', FI:'Europe/Helsinki', FR:'Europe/Paris', GA:'Africa/Libreville', GM:'Africa/Banjul', GE:'Asia/Tbilisi',
+      DE:'Europe/Berlin', GH:'Africa/Accra', GR:'Europe/Athens', GD:'America/Grenada', GT:'America/Guatemala', GN:'Africa/Conakry', GW:'Africa/Bissau', GY:'America/Guyana',
+      HT:'America/Port-au-Prince', HN:'America/Tegucigalpa', HU:'Europe/Budapest', IS:'Atlantic/Reykjavik', IN:'Asia/Kolkata', ID:'Asia/Jakarta', IR:'Asia/Tehran', IQ:'Asia/Baghdad',
+      IE:'Europe/Dublin', IL:'Asia/Jerusalem', IT:'Europe/Rome', JM:'America/Jamaica', JP:'Asia/Tokyo', JO:'Asia/Amman', KZ:'Asia/Almaty', KE:'Africa/Nairobi',
+      KI:'Pacific/Tarawa', KP:'Asia/Pyongyang', KR:'Asia/Seoul', KW:'Asia/Kuwait', KG:'Asia/Bishkek', LA:'Asia/Vientiane', LV:'Europe/Riga', LB:'Asia/Beirut',
+      LS:'Africa/Maseru', LR:'Africa/Monrovia', LY:'Africa/Tripoli', LI:'Europe/Vaduz', LT:'Europe/Vilnius', LU:'Europe/Luxembourg', MG:'Indian/Antananarivo', MW:'Africa/Blantyre',
+      MY:'Asia/Kuala_Lumpur', MV:'Indian/Maldives', ML:'Africa/Bamako', MT:'Europe/Malta', MH:'Pacific/Majuro', MR:'Africa/Nouakchott', MU:'Indian/Mauritius', MX:'America/Mexico_City',
+      FM:'Pacific/Pohnpei', MD:'Europe/Chisinau', MC:'Europe/Monaco', MN:'Asia/Ulaanbaatar', ME:'Europe/Podgorica', MA:'Africa/Casablanca', MZ:'Africa/Maputo', MM:'Asia/Yangon',
+      NA:'Africa/Windhoek', NR:'Pacific/Nauru', NP:'Asia/Kathmandu', NL:'Europe/Amsterdam', NZ:'Pacific/Auckland', NI:'America/Managua', NE:'Africa/Niamey', NG:'Africa/Lagos',
+      MK:'Europe/Skopje', NO:'Europe/Oslo', OM:'Asia/Muscat', PK:'Asia/Karachi', PW:'Pacific/Palau', PS:'Asia/Hebron', PA:'America/Panama', PG:'Pacific/Port_Moresby',
+      PY:'America/Asuncion', PE:'America/Lima', PH:'Asia/Manila', PL:'Europe/Warsaw', PT:'Europe/Lisbon', QA:'Asia/Qatar', RO:'Europe/Bucharest', RU:'Europe/Moscow',
+      RW:'Africa/Kigali', KN:'America/St_Kitts', LC:'America/St_Lucia', VC:'America/St_Vincent', WS:'Pacific/Apia', SM:'Europe/San_Marino', ST:'Africa/Sao_Tome', SA:'Asia/Riyadh',
+      SN:'Africa/Dakar', RS:'Europe/Belgrade', SC:'Indian/Mahe', SL:'Africa/Freetown', SG:'Asia/Singapore', SK:'Europe/Bratislava', SI:'Europe/Ljubljana', SB:'Pacific/Guadalcanal',
+      SO:'Africa/Mogadishu', ZA:'Africa/Johannesburg', SS:'Africa/Juba', ES:'Europe/Madrid', LK:'Asia/Colombo', SD:'Africa/Khartoum', SR:'America/Paramaribo', SE:'Europe/Stockholm',
+      CH:'Europe/Zurich', SY:'Asia/Damascus', TW:'Asia/Taipei', TJ:'Asia/Dushanbe', TZ:'Africa/Dar_es_Salaam', TH:'Asia/Bangkok', TL:'Asia/Dili', TG:'Africa/Lome',
+      TO:'Pacific/Tongatapu', TT:'America/Port_of_Spain', TN:'Africa/Tunis', TR:'Europe/Istanbul', TM:'Asia/Ashgabat', TV:'Pacific/Funafuti', UG:'Africa/Kampala', UA:'Europe/Kyiv',
+      AE:'Asia/Dubai', GB:'Europe/London', US:'America/Los_Angeles', UY:'America/Montevideo', UZ:'Asia/Tashkent', VU:'Pacific/Efate', VA:'Europe/Vatican', VE:'America/Caracas',
+      VN:'Asia/Ho_Chi_Minh', YE:'Asia/Aden', ZM:'Africa/Lusaka', ZW:'Africa/Harare', HK:'Asia/Hong_Kong', MO:'Asia/Macau'
+    };
+
 
 
     const COUNTRY_OPTIONS = [
@@ -704,11 +727,26 @@
     }
     function getUtcMs(record) {
       if (!record?.date || record?.hour === undefined || record?.hour === '') return 0;
-      const offset = record.timezone || '+08:00';
+      const timezone = record.timezone || 'Asia/Shanghai';
       const [year, month, day] = record.date.split('-').map(Number);
       const hour = Number(record.hour);
-      const tzMinutes = parseOffsetToMinutes(offset);
-      return Date.UTC(year, month - 1, day, hour, 0, 0) - tzMinutes * 60 * 1000;
+      let utcGuess = Date.UTC(year, month - 1, day, hour, 0, 0);
+      if (/^[+-]\d{2}:\d{2}$/.test(timezone)) {
+        const tzMinutes = parseOffsetToMinutes(timezone);
+        return utcGuess - tzMinutes * 60 * 1000;
+      }
+      try {
+        let offsetMinutes = getOffsetForIana(utcGuess, timezone);
+        let utc = utcGuess - offsetMinutes * 60 * 1000;
+        let offsetMinutes2 = getOffsetForIana(utc, timezone);
+        if (offsetMinutes2 !== offsetMinutes) {
+          utc = utcGuess - offsetMinutes2 * 60 * 1000;
+        }
+        return utc;
+      } catch (e) {
+        const tzMinutes = parseOffsetToMinutes('+08:00');
+        return utcGuess - tzMinutes * 60 * 1000;
+      }
     }
     function getBeijingDate(record) {
       return new Date(getUtcMs(record) + 8 * 60 * 60 * 1000);
@@ -716,8 +754,53 @@
     function getBeijingSortValue(record) {
       return getUtcMs(record) + 8 * 60 * 60 * 1000;
     }
-    function formatTimezone(offset) {
-      return `UTC${offset}`;
+    function getAllTimezoneValues() {
+      try {
+        if (typeof Intl.supportedValuesOf === 'function') {
+          return Intl.supportedValuesOf('timeZone');
+        }
+      } catch (e) {}
+      return FALLBACK_TIMEZONE_OPTIONS;
+    }
+    function getOffsetForIana(utcMs, timeZone) {
+      const dtf = new Intl.DateTimeFormat('en-US', {
+        timeZone,
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+        hourCycle: 'h23'
+      });
+      const parts = Object.fromEntries(dtf.formatToParts(new Date(utcMs)).filter(p => p.type !== 'literal').map(p => [p.type, p.value]));
+      const asUtc = Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day), Number(parts.hour), Number(parts.minute), Number(parts.second));
+      return (asUtc - utcMs) / 60000;
+    }
+    function timezoneValueToOffsetString(timezone, utcMs = Date.now()) {
+      if (!timezone) return '+08:00';
+      if (/^[+-]\d{2}:\d{2}$/.test(timezone)) return timezone;
+      try {
+        const mins = Math.round(getOffsetForIana(utcMs, timezone));
+        const sign = mins >= 0 ? '+' : '-';
+        const abs = Math.abs(mins);
+        const hh = String(Math.floor(abs / 60)).padStart(2, '0');
+        const mm = String(abs % 60).padStart(2, '0');
+        return `${sign}${hh}:${mm}`;
+      } catch (e) {
+        return '+08:00';
+      }
+    }
+    function getTimezoneLabel(timezone) {
+      const offset = timezoneValueToOffsetString(timezone);
+      if (/^[+-]\d{2}:\d{2}$/.test(timezone || '')) return `UTC${timezone}`;
+      return `${timezone.replaceAll('_', ' ')} (UTC${offset})`;
+    }
+    function formatTimezone(timezone) {
+      return getTimezoneLabel(timezone);
+    }
+    function getDefaultTimezoneByCountry(country) {
+      return COUNTRY_TIMEZONE_DEFAULTS[country] || 'Asia/Shanghai';
+    }
+    function applyCountryDefaultTimezone(countrySelectId, timezoneSelectId) {
+      const tz = getDefaultTimezoneByCountry($(countrySelectId).value);
+      $(timezoneSelectId).value = tz;
     }
     function formatDateHour(date, hour, timezone = '+08:00') {
       return date && hour !== undefined ? `${date} ${hour}:00 (${formatTimezone(timezone)})` : '-';
@@ -738,7 +821,11 @@
       }).join('');
     }
     function renderTimezoneOptions(selectId) {
-      $(selectId).innerHTML = TIMEZONE_OPTIONS.map(([value, label]) => `<option value="${value}">${label}</option>`).join('');
+      const current = $(selectId).value;
+      const all = getAllTimezoneValues();
+      const values = current && !all.includes(current) ? [current, ...all] : all;
+      $(selectId).innerHTML = values.map(value => `<option value="${value}">${getTimezoneLabel(value)}</option>`).join('');
+      if (current) $(selectId).value = current;
     }
     function renderCountryOptions(selectId, includeAll = false) {
       $(selectId).innerHTML = (includeAll ? '<option value="all">全部</option>' : '') + COUNTRY_OPTIONS.map(([iso, label]) => `<option value="${iso}">${label}</option>`).join('');
@@ -908,7 +995,7 @@
     function resetAddForm(keepSome = true) {
       const direction = keepSome ? $('direction').value : 'entry';
       const country = keepSome ? $('country').value : 'US';
-      const timezone = keepSome ? $('timezone').value : '+08:00';
+      const timezone = keepSome ? $('timezone').value : 'Asia/Shanghai';
       const city = keepSome ? $('city').value : '';
       const port = keepSome ? $('port').value : '';
       const transport = keepSome ? $('transport').value : 'aviation';
@@ -917,7 +1004,7 @@
       $('date').value = new Date().toISOString().slice(0, 10);
       $('hour').value = String(new Date().getHours()).padStart(2, '0');
       $('country').value = country;
-      $('timezone').value = timezone;
+      $('timezone').value = timezone || getDefaultTimezoneByCountry($('country').value);
       $('city').value = city;
       $('port').value = port;
       $('transport').value = transport;
@@ -950,7 +1037,7 @@
     function openEdit(id) {
       const record = records.find(r => r.id === id); if (!record) return;
       editingId = id; currentEditStampImage = record.stampImage || ''; currentEditVisaImage = record.visaImage || '';
-      $('editDirection').value = record.direction || 'entry'; $('editDate').value = record.date || ''; $('editHour').value = record.hour || '00'; $('editTimezone').value = record.timezone || '+08:00'; $('editCountry').value = record.country || 'US';
+      $('editDirection').value = record.direction || 'entry'; $('editDate').value = record.date || ''; $('editHour').value = record.hour || '00'; $('editCountry').value = record.country || 'US'; $('editTimezone').value = record.timezone || getDefaultTimezoneByCountry($('editCountry').value);
       $('editCity').value = record.city || ''; $('editPort').value = record.port || ''; $('editTransport').value = record.transport || 'other'; $('editFlightNo').value = record.flightNo || '';
       $('editVisaPolicy').value = record.visaPolicy || 'visa_free'; $('editNote').value = record.note || ''; $('editStampImage').value = ''; $('editVisaImage').value = '';
       updateEditVisaFieldVisibility(); setPreview($('editStampPreview'), $('clearEditStampBtn'), currentEditStampImage); setPreview($('editVisaPreview'), $('clearEditVisaBtn'), currentEditVisaImage);
@@ -991,9 +1078,9 @@
         });
       });
       $('direction').addEventListener('change', updateVisaFieldVisibility);
-      $('country').addEventListener('change', updateVisaFieldVisibility);
+      $('country').addEventListener('change', () => { applyCountryDefaultTimezone('country', 'timezone'); updateVisaFieldVisibility(); });
       $('editDirection').addEventListener('change', updateEditVisaFieldVisibility);
-      $('editCountry').addEventListener('change', updateEditVisaFieldVisibility);
+      $('editCountry').addEventListener('change', () => { applyCountryDefaultTimezone('editCountry', 'editTimezone'); updateEditVisaFieldVisibility(); });
       $('visaPolicy').addEventListener('change', updateVisaFieldVisibility);
       $('editVisaPolicy').addEventListener('change', updateEditVisaFieldVisibility);
       $('saveBtn').addEventListener('click', addRecord); $('saveEditBtn').addEventListener('click', saveEdit); $('closeModalBtn').addEventListener('click', closeEdit);
@@ -1016,7 +1103,7 @@
     renderHourOptions('hour'); renderHourOptions('editHour');
     renderTimezoneOptions('timezone'); renderTimezoneOptions('editTimezone');
     renderCountryOptions('country'); renderCountryOptions('editCountry'); renderCountryOptions('filterCountry', true);
-    bindEvents(); resetAddForm(false); updateVisaFieldVisibility(); updateEditVisaFieldVisibility(); renderAll();
+    bindEvents(); resetAddForm(false); applyCountryDefaultTimezone('country', 'timezone'); updateVisaFieldVisibility(); updateEditVisaFieldVisibility(); renderAll();
     window.openEdit = openEdit; window.deleteRecord = deleteRecord;
   </script>
 </body>
